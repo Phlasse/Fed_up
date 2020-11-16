@@ -5,7 +5,7 @@ import os
 import project_name
 import pandas as pd
 # Import from our lib
-from project_name.lib import clean_data
+from Fed_up.lib import clean_data
 import pytest
 
 
