@@ -1,0 +1,3 @@
+graft Fed_up
+global-exclude *.py[cod] __pycache__ *.so *.ipynb
+recursive-exclude  Fed_up/jupy *
