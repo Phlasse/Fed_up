@@ -10,9 +10,9 @@ check_code:
 black:
 	@black scripts/* Fed_up/*.py
 
-# test:
-	# @coverage run -m pytest tests/*.py
-	# @coverage report -m --omit=$(VIRTUAL_ENV)/lib/python*
+test:
+	@coverage run -m pytest tests/*.py
+	@coverage report -m --omit=$(VIRTUAL_ENV)/lib/python*
 
 ftest:
 	@Write me
@@ -28,7 +28,7 @@ clean:
 install:
 	@pip install . -U
 
-all: clean install black check_code # test
+all: clean install test black check_code
 
 
 uninstal:

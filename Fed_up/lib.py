@@ -1,5 +1,5 @@
-# # -*- coding: UTF-8 -*-
-# # Copyright (C) 2018 Jean Bizot <jean@styckr.io>
+# -*- coding: UTF-8 -*-
+# Copyright (C) 2018 Jean Bizot <jean@styckr.io>
 # """ Main lib for Fed_up Project
 # """
 
