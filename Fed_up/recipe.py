@@ -67,6 +67,7 @@ def clean_data(df):
     target_df = pd.DataFrame(df, columns=ordered_cols)
     return target_df
 
+
 def get_data():
     """ Initial cleaning of data """
     return clean_data(select_universe(get_raw_data()))
