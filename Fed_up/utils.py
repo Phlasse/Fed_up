@@ -28,7 +28,6 @@ def remove_numbers(col_to_change):
 
 def removes_stopwords(col_to_change, language='english'):
     # Remove the most commun words of String - Need to specify a language
-
     stop_words = set(stopwords.words(language))
     word_tokens = word_tokenize(col_to_change)
     col_to_change = [word for word in word_tokens if not word in stop_words]
@@ -37,37 +36,40 @@ def removes_stopwords(col_to_change, language='english'):
 
 def word_lemmatizer(col_to_change):
     # Lemmatize the words of the String.
-
     lemmatize = [WordNetLemmatizer().lemmatize(word) for word in col_to_change]
     return ' '.join(word for word in lemmatize)
 
 
-def cleaning_strings(element, remove_punctuation=True, lower_case=True, remove_numbers=True, removes_stopwords=True, language='english', word_lemmatizer=False):
-    if remove_punctuation:
-        element = remove_punctuation(element)
-    if lower_case:
-        element = lower_case(element)
-    if remove_numbers:
-        element = remove_numbers(element)
-    if removes_stopwords:
-        element = removes_stopwords(element, language)
-    if word_lemmatizer:
-        element = word_lemmatizer(element)
+def cleaning_strings(df_series, remove_punc=True, lower_c=True, remove_num=True, remove_stopw=True, language='english', word_lemmatize=False):
+    # Calling each function if paramter(s) is(are) True
+    if remove_punc:
+        df_series = df_series.apply(remove_punctuation)
+    if lower_c:
+        df_series = df_series.apply(lower_case)
+    if remove_num:
+        df_series = df_series.apply(remove_numbers)
+    if remove_stopw:
+        df_series = df_series.apply(removes_stopwords, language=language)
+    if word_lemmatize:
+        df_series = df_series.apply(word_lemmatizer)
 
-    return element
-
+    return df_series
 
 
 if __name__ == "__main__":
-    data = get_data()
+    data = get_data().head(50)
     columns = ['steps', 'description', 'tags', 'ingredients']
-
+    #print(data.info())
     print("")
     print("********************")
 
     for column in columns:
-        import ipdb; ipdb.set_trace()
-        #data[column] = data[column].map(cleaning_strings)
-        data[column] = data[column].apply(remove_punctuation)
+        #print(type(data[column]))
+        #import ipdb; ipdb.set_trace()
+        data[column] = cleaning_strings(data[column])
 
-    print(data.head())
+        ########### /!\ /!\ ###########
+        ##  Not handling NAN values  ##
+        ###############################
+
+    print(data.head(15))
