@@ -1,6 +1,7 @@
 pip>=9
 setuptools>=26
 wheel>=0.29
+numpy
 pandas
 pytest
 coverage
@@ -9,3 +10,8 @@ black
 yapf
 python-gitlab
 twine
+
+sklearn
+matplotlib
+seaborn
+python-dotenv
