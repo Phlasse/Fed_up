@@ -12,7 +12,7 @@ LIST_COLS = ['tags', 'nutrition', 'steps', 'ingredients']
 
 
 def get_raw_data():
-    """ Reading data from CSV and evaluating list cols """
+    """ Reading recipe data from CSV and evaluating list cols """
     print('Reading data from CSV and evaluating list cols...')
 
     converters = {col: eval for col in LIST_COLS}
@@ -42,8 +42,8 @@ def __clean_nutrition(df, col='nutrition'):
 
 
 def clean_data(df):
-    """ Reading data from CSV and evaluating list cols """
-    print('Reading data from CSV and evaluating list cols...')
+    """ Cleaning and converting data for recipes """
+    print('Cleaning and converting data for recipes...')
 
     # Generating nutrition columns
     df[NUTRITION_COLS] = __clean_nutrition(df)
@@ -59,8 +59,11 @@ def clean_data(df):
     # Creating metadata column
     df['metadata'] = df['tags'] + " " + df['ingredients'] + " " + df['steps'] + " " + df['description']
 
+    # Renaming contributor_id to user_id for coherence
+    df.rename(columns = {'contributor_id': 'user_id'}, inplace = True)
+
     # Reorganizing column position (note: nutrition list column is dropped)
-    ordered_cols = ['id', 'contributor_id', 'name', 'minutes','n_steps', 'n_ingredients', 'calories',
+    ordered_cols = ['recipe_id', 'user_id', 'name', 'minutes','n_steps', 'n_ingredients', 'calories',
                     'total_fat', 'sugar', 'sodium', 'protein', 'saturated_fat', 'carbohydrates',
                     'tags', 'ingredients', 'steps', 'description', 'metadata', 'submitted']
 
@@ -69,7 +72,9 @@ def clean_data(df):
 
 
 def get_data():
-    """ Initial cleaning of data """
+    """ Initial cleaning of recipe data """
+    print('\n*** Initial cleaning of recipe data ***')
+
     return clean_data(select_universe(get_raw_data()))
 
 
