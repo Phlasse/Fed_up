@@ -42,6 +42,8 @@ def word_lemmatizer(col_to_change):
 
 def cleaning_strings(df_series, remove_punc=True, lower_c=True, remove_num=True, remove_stopw=True, language='english', word_lemmatize=False):
     # Calling each function if paramter(s) is(are) True
+    df_series = df_series.fillna("")  ## => Handling if Na inside the Pandas series.
+
     if remove_punc:
         df_series = df_series.apply(remove_punctuation)
     if lower_c:
@@ -57,7 +59,7 @@ def cleaning_strings(df_series, remove_punc=True, lower_c=True, remove_num=True,
 
 
 if __name__ == "__main__":
-    data = get_data().head(50)
+    data = get_data().head(100)
     columns = ['steps', 'description', 'tags', 'ingredients']
     #print(data.info())
     print("")
@@ -68,8 +70,5 @@ if __name__ == "__main__":
         #import ipdb; ipdb.set_trace()
         data[column] = cleaning_strings(data[column])
 
-        ########### /!\ /!\ ###########
-        ##  Not handling NAN values  ##
-        ###############################
 
-    print(data.head(15))
+    print(data[columns].head(50))
