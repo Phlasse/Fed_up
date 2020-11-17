@@ -30,12 +30,17 @@ def get_raw_data(folder="data/raw", filename="RAW_recipes.csv"):
 def select_universe(df):
     """ Selecting relevant universe of recipes """
     print('Selecting relevant universe of recipes...')
+    folder = "data/raw"
+    filename = "RAW_interactions.csv"
 
     # Load recipes and reviews and merge both tables and grouping them; drop NaN
     print('> Loading review data for universe selection...')
     df.rename(columns={"id": "recipe_id"}, inplace=True)
-    csv_path = os.path.join(os.path.dirname(__file__), "data/raw")
-    reviews_df = pd.read_csv(f'{csv_path}/RAW_interactions.csv')
+
+    csv_path = os.path.join(os.path.dirname(__file__), folder)
+    reviews_df = pd.read_csv(f'{csv_path}/{filename}')
+    reviews_df = reviews_df[reviews_df['rating'] > 0]
+
     merged_df = df.merge(reviews_df, on="recipe_id", how="inner")
     agg_df = merged_df.groupby(by="recipe_id").agg({"rating": ["mean", "count"]}).xs('rating', axis=1, drop_level=True)
     review_merge_df = df.merge(agg_df, on="recipe_id", how="inner").dropna()
@@ -54,8 +59,8 @@ def select_universe(df):
 
     # Recipes containing too specific ingredients will be removed
     low_use_ingredients = [i for i, count in ingredients_dict.items() if count < 2]
-    # print(f"> Removing rows with too specific ingredients now ({len(low_use_ingredients)})...")
-    # review_merge_df = __remove_list_from_df(review_merge_df, low_use_ingredients, "ingredients")
+    print(f"> Removing rows with too specific ingredients now ({len(low_use_ingredients)})...")
+    review_merge_df = __remove_list_from_df(review_merge_df, low_use_ingredients, "ingredients")
 
     # Removing drinks and icecream recipes using tags
     drink_tags = ["cocktails", "punch", "non-alcoholic", "ice-cream", "brewing", "beverages", "smoothies"]
@@ -132,24 +137,42 @@ def get_data():
     return clean_data(select_universe(get_raw_data()))
 
 
+def generate_preprocessed_data(folder="data/preprocessed"):
+    """ Automatically generating samples for recipes and reviews """
+    csv_path = os.path.join(os.path.dirname(__file__), folder)
+    recipes = get_data()
+    reviews = review.get_data(recipes)
+
+    timestamp = '{:%Y%m%d_%H%M}'.format(datetime.datetime.now())
+    recipes.to_csv(f'{csv_path}/recipe_pp_{timestamp}.csv', index=False)
+    reviews.to_csv(f'{csv_path}/review_pp_{timestamp}.csv', index=False)
+
+    return recipes, reviews
+
+
 def generate_sample_data(folder="data/samples", size=2000):
     """ Automatically generating samples for recipes and reviews """
     csv_path = os.path.join(os.path.dirname(__file__), folder)
     recipes = get_data()
     recipes_sample = recipes.sample(size)
     reviews_sample = review.get_data(recipes_sample)
+
     timestamp = '{:%Y%m%d_%H%M}'.format(datetime.datetime.now())
     recipes_sample.to_csv(f'{csv_path}/recipe_sample_{timestamp}.csv', index=False)
     reviews_sample.to_csv(f'{csv_path}/review_sample_{timestamp}.csv', index=False)
 
+    return recipes_sample, reviews_sample
+
 
 if __name__ == "__main__":
-    data = get_data()
     generate_sample_data()
 
-    print("")
-    print("********************")
-    print('Rows:', data.shape[0])
-    print('Cols:', data.shape[1])
-    print("")
-    print(data.info())
+    #generate_preprocessed_data()
+
+    # data = get_data()
+    # print("")
+    # print("********************")
+    # print('Rows:', data.shape[0])
+    # print('Cols:', data.shape[1])
+    # print("")
+    # print(data.info())
