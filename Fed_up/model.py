@@ -6,10 +6,6 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import TruncatedSVD
 from sklearn.metrics.pairwise import cosine_similarity
 
-
-
-
-
 def get_one_recommendation(recipe=45119, n_recommendations = 20):
 
     recipes_df = pd.read_csv("data/samples/recipe_sample_20201117_1232.csv")
