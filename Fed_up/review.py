@@ -24,9 +24,13 @@ def select_universe(df, recipe_df=None):
     """ Selecting relevant universe of reviews """
     print('Selecting relevant universe of reviews...')
 
+    # Removing reviews of excluded recipes
     if recipe_df is not None and isinstance(recipe_df, pd.DataFrame):
         recipe_ids = list(recipe_df['recipe_id'].sort_values())
         df = df[df['recipe_id'].isin(recipe_ids)]
+
+    # Only keeping positive ratings
+    df = df[df['rating'] > 0]
 
     return df.dropna()
 
@@ -39,7 +43,7 @@ def clean_data(df):
     df['date'] = pd.to_datetime(df['date'])
 
     # Creating liked column
-    df['liked'] = df['rating'].map(lambda r: 1 if r >= 4 else 0)
+    df['liked'] = df['rating'].map(lambda r: 1 if r >= 4 else 0).astype(int)
 
     # Reorganizing column position (note: nutrition list column is dropped)
     ordered_cols = ['recipe_id', 'user_id', 'rating', 'liked', 'review', 'date']
