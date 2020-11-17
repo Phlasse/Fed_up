@@ -6,10 +6,19 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import TruncatedSVD
 from sklearn.metrics.pairwise import cosine_similarity
 
-def get_one_recommendation(recipe=45119, n_recommendations = 20):
 
-    recipes_df = pd.read_csv("data/samples/recipe_sample_20201117_1232.csv")
-    reviews_df = pd.read_csv("data/samples/review_sample_20201117_1232.csv")
+
+
+
+def get_one_recommendation(recipe, n_recommendations = 500):
+
+    recipes_df_raw = pd.read_csv("data/preprocessed/data_preprocessed_recipe_pp_20201117_1347.csv").sample(n=n_recommendations, random_state=1)
+    reviews_df_raw = pd.read_csv("data/preprocessed/data_preprocessed_review_pp_20201117_1347.csv")
+
+    merge_df = pd.merge(recipes_df_raw[['recipe_id', 'metadata']], reviews_df_raw, on="recipe_id", how="right").dropna()
+    recipes_df = merge_df[['recipe_id', 'metadata']].groupby(by="recipe_id").first().reset_index()
+    reviews_df = merge_df.drop(['metadata'], axis="columns").reset_index()
+
 
     #Using CountVectorizer to encode metadata into column
     count = CountVectorizer(stop_words='english')
@@ -26,8 +35,11 @@ def get_one_recommendation(recipe=45119, n_recommendations = 20):
     latent_df
 
     # start recommendin similar recipes on the basis of user ratings (item-item collaborative filtering
-    ratings = reviews_df.pivot(index = 'recipe_id', columns ='user_id', values = 'rating').fillna(0)
+    #### -> old: ratings = reviews_df.pivot(index = 'recipe_id', columns ='user_id', values = 'rating').fillna(0)
+    #
+    ratings1 = pd.merge(recipes_df[['recipe_id']], reviews_df, on="recipe_id", how="right")
 
+    ratings = ratings1.pivot(index = 'recipe_id', columns ='user_id', values = 'rating').fillna(0)
 
     svd = TruncatedSVD(n_components=800)
     latent_df_2 = svd.fit_transform(ratings)
@@ -53,16 +65,33 @@ def get_one_recommendation(recipe=45119, n_recommendations = 20):
 
     return recommendation_df.head(n_recommendations).reset_index().rename(columns={"index":"recipe_id"})
 
-def get_user_recommendations(user_id, n_recommendations = 1000):
-    reviews_df = pd.read_csv("data/samples/review_sample_20201117_1232.csv")
+def get_user_recommendations(user_id, n_recommendations = 500):
+    '''thi function gets the recommendations fo one user by taking all of its liked and disliked dishes,
+     getting the recommendation based on each recipe and then summing the scores'''
+
+    recipes_df = pd.read_csv("data/preprocessed/data_preprocessed_recipe_pp_20201117_1347.csv").sample(n=n_recommendations, random_state=1)
+    reviews_df = pd.read_csv("data/preprocessed/data_preprocessed_review_pp_20201117_1347.csv").sample(n=n_recommendations, random_state=1)
+
+    # finding the user's recommended dishes and creating a list'
     recipe_list = [i for i in reviews_df[reviews_df.user_id==user_id].recipe_id]
-    recommendations = [get_one_recommendation(i, n_recommendations) for i in recipe_list]
+    actual_list = []
+    for i in range(len(recipe_list)):
+        if recipe_list[i] in recipes_df.recipe_id.tolist() and recipe_list[i] in reviews_df.recipe_id.tolist():
+            actual_list.append(recipe_list[i])
+    # running the get recommendations for each recipe id the user liked
+    recommendations = [get_one_recommendation(i, n_recommendations) for i in actual_list]
+    #concetenate the list to a big df
     recommendations_df=pd.concat(recommendations)
-    grouped_recommendations= recommendations_df.groupby(by="recipe_id").mean().sort_values(by="hybrid", ascending=False)
+    # sum the scores using groupby
+    grouped_recommendations= recommendations_df.groupby(by="recipe_id").sum().sort_values(by="hybrid", ascending=False)
     return grouped_recommendations
     #return recipe_list
 
 
 if __name__ == "__main__":
     #print(get_one_recommendation())
-    print(get_user_recommendations(3934))
+    result = get_user_recommendations(424680, n_recommendations=15000)
+    #reviews_df = pd.read_csv("data/preprocessed/data_preprocessed_review_pp_20201117_1347.csv").sample(n=10000, random_state=9).reset_index().groupby("user_id").count().sort_values(by="rating", ascending=False)
+    print(result)
+    #plt.hist(result.hybrid, bins=50)
+    #plt.show()
