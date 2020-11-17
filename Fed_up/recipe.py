@@ -24,9 +24,66 @@ def get_raw_data():
 def select_universe(df):
     """ Selecting relevant universe of recipes """
     print('Selecting relevant universe of recipes...')
+    # load recipes and reviews and merge both tables and grouping them
+    # also dropping NAN
+    csv_path = os.path.join(os.path.dirname(__file__), "data/raw")
+    recipes_df = get_raw_data()
+    recipes_df.rename(columns={"id":"recipe_id"}, inplace=True)
+    reviews_df = pd.read_csv(f'{csv_path}/RAW_interactions.csv')
+    merged_df = recipes_df.merge(reviews_df, on="recipe_id", how="inner")
+    review_merge_df = merged_df.groupby(by="name").agg({"recipe_id":"first","minutes":"first","contributor_id":"first","submitted":"first","tags":"first","nutrition":"first","steps":"first", "description":"first", "ingredients": "first", "n_ingredients":"first", "rating":"mean"}).dropna()
+    #removing very specific ingredients
+    #1st i
+    print("creating lists for filtering ......")
+    ingredients = review_merge_df["ingredients"]
+    ingredients_list_clean = []
+    ingredients_list_for_counting = []
+    for i in ingredients:
+        for j in i:
+            if j not in ingredients_list_clean:
+                ingredients_list_clean.append(j)
+            ingredients_list_for_counting.append(j)
+    # now the lowest occurring ingredients are found and assumed as "too specific"
+    # Recipes containing these ingredients will be removed
+    print("removing too specific ingredients now ......")
 
-    # TO DO
-    return df
+    low_use_ingredients = count_occurrence(ingredients_list_clean,ingredients_list_for_counting,2)
+    df_merged_ing = remove_list_from_df(review_merge_df, low_use_ingredients, "ingredients")
+    print("specific ingredients are now removed")
+
+    #removing drinks and icecream recipes using tags:
+    print("removing drinks now ......")
+
+    drink_tags=['cocktails', 'punch', "non-alcoholic", "ice-cream", "brewing", "beverages", "smoothies"]
+    df_merged_ing_drink = remove_list_from_df(df_merged_ing, drink_tags, "tags")
+    print("drinks are now removed")
+
+    # removing outliers by cooking time and number of ingredients
+    print("removing outliers from dataframe now...")
+    df_post_time = df_merged_ing_drink[df_merged_ing_drink.minutes < 300]
+    df_post_ings = df_post_time[df_post_time.n_ingredients <21]
+    print("Outliers removed")
+
+    return df_post_ings
+
+def count_occurrence(list_clean,list_tot, threshold):
+    # creating a list of items that only occur in a list x times (threshold)
+    excluding_list =[]
+    for i in list_clean:
+        count = 0
+        for j in list_tot:
+            if j == i:
+                count+=1
+        if count < threshold:
+            excluding_list.append(i)
+    return excluding_list
+
+def remove_list_from_df(df, tag_list, column):
+    #removing roew from a dataframe that contain items from a specific tag list
+    data = df
+    for i in tag_list:
+        data = data[~data[column].str.contains(i)]
+    return data
 
 
 def __clean_nutrition(df, col='nutrition'):
