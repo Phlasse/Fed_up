@@ -6,6 +6,7 @@ import pandas as pd
 import ipdb
 import regex as re
 import warnings
+import datetime
 
 from Fed_up import review
 
@@ -131,14 +132,20 @@ def get_data():
     return clean_data(select_universe(get_raw_data()))
 
 
-def generate_sample_data(size=2000):
+def generate_sample_data(folder="data/samples", size=2000):
+    """ Automatically generating samples for recipes and reviews """
+    csv_path = os.path.join(os.path.dirname(__file__), folder)
     recipes = get_data()
     recipes_sample = recipes.sample(size)
-    reviews_sample = reviews.get_data(recipes_sample)
+    reviews_sample = review.get_data(recipes_sample)
+    timestamp = '{:%Y%m%d_%H%M}'.format(datetime.datetime.now())
+    recipes_sample.to_csv(f'{csv_path}/recipe_sample_{timestamp}.csv', index=False)
+    reviews_sample.to_csv(f'{csv_path}/review_sample_{timestamp}.csv', index=False)
 
 
 if __name__ == "__main__":
     data = get_data()
+    generate_sample_data()
 
     print("")
     print("********************")
