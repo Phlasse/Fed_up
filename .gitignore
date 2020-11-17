@@ -12,3 +12,4 @@ groupama/data/base_pno.*
 Fed_up/data/raw/
 Fed_up/data/preprocessed/
 .env
+*csv
