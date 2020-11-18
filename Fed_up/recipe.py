@@ -87,13 +87,14 @@ def select_universe(df):
     print('> Loading review data for universe selection...')
     csv_path = os.path.join(os.path.dirname(__file__), "data/raw")
     reviews_df = pd.read_csv(f'{csv_path}/RAW_interactions.csv')
-    reviews_df = reviews_df[reviews_df['rating'] > 0]
+    recipe_ids = set(df['recipe_id'])
+    reviews_df = reviews_df[(reviews_df['rating'] > 0) & (reviews_df['recipe_id'].isin(recipe_ids))]
 
     # Removing recipes with unique user reviews
     print('> Removing recipes with unique user reviews...')
     count_df = reviews_df.groupby(by="user_id").count()
     count_df = count_df[count_df.rating < 2].reset_index()
-    users_to_remove = list(count_df.user_id)
+    users_to_remove = set(count_df.user_id)
     reviews_df = reviews_df[~reviews_df.user_id.isin(users_to_remove)]
 
     merged_df = df.merge(reviews_df, on="recipe_id", how="inner")
@@ -108,7 +109,6 @@ def __remove_list_from_df(df, tag_list, column):
     data = df.copy()
     data['str'] = data[column].map(lambda x: (' ').join(x))
 
-    # for tag in tag_list:
     warnings.filterwarnings("ignore", 'This pattern has match groups')
     j_tag_list = ('|').join(tag_list)
     data = data[~data['str'].str.contains(j_tag_list, flags=re.IGNORECASE, regex=True)]
@@ -169,10 +169,10 @@ def get_data():
 
 def generate_preprocessed_data():
     """ Automatically generating samples for recipes and reviews """
-    csv_path = os.path.join(os.path.dirname(__file__), "data/preprocessed")
     recipes = get_data()
     reviews = review.get_data(recipes)
 
+    csv_path = os.path.join(os.path.dirname(__file__), "data/preprocessed")
     # timestamp = '{:%Y%m%d_%H%M}'.format(datetime.datetime.now())
     recipes.to_csv(f'{csv_path}/recipe_pp.csv', index=False)
     reviews.to_csv(f'{csv_path}/review_pp.csv', index=False)
@@ -182,11 +182,11 @@ def generate_preprocessed_data():
 
 def generate_sample_data(size=2000):
     """ Automatically generating samples for recipes and reviews """
-    csv_path = os.path.join(os.path.dirname(__file__), "data/samples")
     recipes = get_data()
     recipes_sample = recipes.sample(size)
     reviews_sample = review.get_data(recipes_sample)
 
+    csv_path = os.path.join(os.path.dirname(__file__), "data/samples")
     #timestamp = '{:%Y%m%d_%H%M}'.format(datetime.datetime.now())
     recipes_sample.to_csv(f'{csv_path}/recipe_sample.csv', index=False)
     reviews_sample.to_csv(f'{csv_path}/review_sample.csv', index=False)
