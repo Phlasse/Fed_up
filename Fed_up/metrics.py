@@ -55,13 +55,7 @@ def like_f1(data):
     return 0.0
 
 
-def get_scoring_metrics(data, sample=None, dif_threshold=1):
-
-    if sample is None:
-        tdata = data.copy()
-    else:
-        tdata = data.copy().sample(sample)
-
+def get_scoring_metrics(data, dif_threshold=1):
     return {'rating_mae': rating_mae(tdata),
             'rating_le': rating_le(tdata, dif_threshold=dif_threshold),
             'like_accuracy': like_accuracy(tdata),

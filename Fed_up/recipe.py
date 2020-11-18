@@ -9,6 +9,7 @@ import warnings
 import datetime
 
 from Fed_up import review
+from Fed_up import utils
 
 
 NUTRITION_COLS = ['calories', 'total_fat', 'sugar', 'sodium',
@@ -31,27 +32,9 @@ def select_universe(df):
     """ Selecting relevant universe of recipes """
     print('Selecting relevant universe of recipes...')
 
-    # Load recipes and reviews and merge both tables and grouping them; drop NaN
-    print('> Loading review data for universe selection...')
-    df.rename(columns={"id": "recipe_id"}, inplace=True)
-
-    csv_path = os.path.join(os.path.dirname(__file__), "data/raw")
-    reviews_df = pd.read_csv(f'{csv_path}/RAW_interactions.csv')
-    reviews_df = reviews_df[reviews_df['rating'] > 0]
-
-    print('> Removing recipes with unique user reviews...')
-    count_df = reviews_df.groupby(by="user_id").count()
-    count_df = count_df[count_df.rating < 2].reset_index()
-    users_to_remove = list(count_df.user_id)
-    reviews_df = reviews_df[~reviews_df.user_id.isin(users_to_remove)]
-
-    merged_df = df.merge(reviews_df, on="recipe_id", how="inner")
-    agg_df = merged_df.groupby(by="recipe_id").agg({"rating": ["mean", "count"]}).xs('rating', axis=1, drop_level=True)
-    review_merge_df = df.merge(agg_df, on="recipe_id", how="inner").dropna()
-
     # Listing very specific ingredients
     print("> Creating lists for filtering...")
-    ingredients = review_merge_df["ingredients"]
+    ingredients = df["ingredients"]
 
     ingredients_dict = {}
     for i in ingredients:
@@ -64,10 +47,10 @@ def select_universe(df):
     # Recipes containing too specific ingredients will be removed
     low_use_ingredients = [i for i, count in ingredients_dict.items() if count <= 5]
     print(f"> Removing rows with too specific ingredients now ({len(low_use_ingredients)})...")
-    review_merge_df = __remove_list_from_df(review_merge_df, low_use_ingredients, "ingredients")
+    df = __remove_list_from_df(df, low_use_ingredients, "ingredients")
 
     print("> Creating tags for filtering...")
-    tags = review_merge_df["tags"]
+    tags = df["tags"]
 
     tags_dict = {}
     for i in tags:
@@ -80,7 +63,7 @@ def select_universe(df):
     # Recipes containing too specific tags will be removed
     low_use_tags = [i for i, count in tags_dict.items() if count <= 5]
     print(f"> Removing rows with too specific tags now ({len(low_use_tags)})...")
-    review_merge_df = __remove_list_from_df(review_merge_df, low_use_tags, "tags")
+    df = __remove_list_from_df(df, low_use_tags, "tags")
 
     # Removing breakfasts, desserts, drinks and icecream, etc. recipes using tags
     exclusion_tags = ['desserts', 'breakfast', 'cookies-and-brownies','beverages','brewing', 'syrup', \
@@ -93,11 +76,29 @@ def select_universe(df):
                       'sugar-cookies', 'halloween-cupcakes','halloween-cakes','halloween-cocktails']
 
     print(f"> Removing rows with excluded tags now ({len(exclusion_tags)})...")
-    review_merge_df = __remove_list_from_df(review_merge_df, exclusion_tags, "tags")
+    df = __remove_list_from_df(df, exclusion_tags, "tags")
 
     # Removing outliers by cooking time and number of ingredients
     print("> Removing rows with outliers from dataframe now...")
-    review_merge_df = review_merge_df[(review_merge_df.minutes <= 300) & (review_merge_df.n_ingredients <= 20)]
+    df = df[(df.minutes <= 300) & (df.n_ingredients <= 20)]
+    df = df.rename(columns={"id": "recipe_id"})
+
+    # Load recipes and reviews and merge both tables and grouping them; drop NaN
+    print('> Loading review data for universe selection...')
+    csv_path = os.path.join(os.path.dirname(__file__), "data/raw")
+    reviews_df = pd.read_csv(f'{csv_path}/RAW_interactions.csv')
+    reviews_df = reviews_df[reviews_df['rating'] > 0]
+
+    # Removing recipes with unique user reviews
+    print('> Removing recipes with unique user reviews...')
+    count_df = reviews_df.groupby(by="user_id").count()
+    count_df = count_df[count_df.rating < 2].reset_index()
+    users_to_remove = list(count_df.user_id)
+    reviews_df = reviews_df[~reviews_df.user_id.isin(users_to_remove)]
+
+    merged_df = df.merge(reviews_df, on="recipe_id", how="inner")
+    agg_df = merged_df.groupby(by="recipe_id").agg({"rating": ["mean", "count"]}).xs('rating', axis=1, drop_level=True)
+    review_merge_df = df.merge(agg_df, on="recipe_id", how="inner").dropna()
 
     return review_merge_df
 
@@ -131,8 +132,9 @@ def clean_data(df):
     # Converting date columns
     df['submitted'] = pd.to_datetime(df['submitted'])
 
-    # Creating metadata column
+    # Creating and cleaning metadata column
     df['metadata'] = df['name'] + " " + df['tags_str'] + " " + df['ingredients_str'] # + " " + df['steps_str'] + " " + df['description_str']
+    df['metadata'] = utils.cleaning_strings(df['metadata'], remove_num=False)
 
     # Renaming contributor_id to user_id for coherence
     df.rename(columns = {'contributor_id': 'user_id', 'mean': 'rating_mean', 'count': 'rating_count'}, inplace = True)

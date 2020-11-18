@@ -55,14 +55,19 @@ def setup_test_data(min_reviews=2):
     return test_df
 
 
-def run_test(predict=False):
+def run_test(predict=False, sample=None):
     """ Running the test, by computing predictions and preparing the result dataframe """
 
     print("Fetching the test inputs...")
     input_csv_path = os.path.join(os.path.dirname(__file__), "data/test")
-    data = pd.read_csv(f'{input_csv_path}/test_inputs.csv')
+    input_data = pd.read_csv(f'{input_csv_path}/test_inputs.csv')
 
     print("Calculating predictions...")
+
+    if sample is None:
+        data = input_data.copy()
+    else:
+        data = input_data.copy().sample(sample)
 
     if predict:
         pass
