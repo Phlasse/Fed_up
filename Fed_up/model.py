@@ -20,7 +20,7 @@ def get_df_4_model(user_id, n_recommendations = 20000):
     # !! currently the df is way to big, so we need to take a sample, but ensure that the recipes the user likes are used for finding similarities later
     # For this I will create a sample df without user recipes and concatenate the a df with only user liked recipes
 
-    user_rates = [i for i in reviews_df_raw[reviews_df_raw.user_id == user_id].recipe_id] # generate a list of user rated recipes
+    user_rates =list(reviews_df_raw[reviews_df_raw.user_id == user_id].recipe_id) # generate a list of user rated recipes
 
     sample_df_no_user = recipes_df_raw[~recipes_df_raw.recipe_id.isin(user_rates)].sample(n=n_recommendations, random_state=1)
     recipe_df_w_user = recipes_df_raw[recipes_df_raw.recipe_id.isin(user_rates)]
@@ -29,8 +29,8 @@ def get_df_4_model(user_id, n_recommendations = 20000):
     merge_df = pd.merge(recipes_df_user[['recipe_id', 'metadata']], reviews_df_raw, on="recipe_id", how="right").dropna()
     recipes_df = merge_df[['recipe_id', 'metadata']].groupby(by="recipe_id").first().reset_index()
     reviews_df = merge_df.drop(['metadata'], axis="columns").reset_index()
-
-
+    print(len(user_rates))
+    print(sample_df_no_user.shape)
     #Using CountVectorizer to encode metadata into column
     count = CountVectorizer(stop_words='english')
     count_matrix = count.fit_transform(recipes_df['metadata'])
@@ -57,6 +57,10 @@ def get_df_4_model(user_id, n_recommendations = 20000):
 
     index_list = reviews_df.groupby(by="recipe_id").mean().index.tolist()
     latent_df_2 = pd.DataFrame(latent_df_2, index=index_list)
+
+    latent_df.to_csv(f'data/latents/latent_content.csv', index=True)
+    latent_df_2.to_csv(f'data/latents/latent_rating.csv', index=True)
+
 
     return latent_df, latent_df_2, user_rates
 
@@ -98,7 +102,6 @@ def get_user_recommendations(user_id, n_recommendations = 500):
 
 def get_superuser_recommendation(n_recommendations=100):
     user_id = 424680
-    n_recommendations=100
 
     latent_1, latent_2, recipe_list = get_df_4_model(user_id, n_recommendations)
 
@@ -117,7 +120,7 @@ def get_superuser_recommendation(n_recommendations=100):
 
 if __name__ == "__main__":
 
-    result = get_superuser_recommendation(n_recommendations=100)
+    result = get_superuser_recommendation(n_recommendations=4000)
 
     print('Here are the top results for the user:')
     print(result)
