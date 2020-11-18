@@ -10,13 +10,13 @@ import datetime
 from Fed_up.metrics import get_scoring_metrics
 
 
-def setup_test_data(min_reviews=2, input_folder="data/preprocessed", input_filename="review_pp.csv", output_folder="data/test"):
+def setup_test_data(min_reviews=2):
     """ Creating a dataframe per user with the inputs and target for testing """
 
     # Fetching the review dataframe
     print("Fetching the review dataframe...")
-    input_csv_path = os.path.join(os.path.dirname(__file__), input_folder)
-    data = pd.read_csv(f'{input_csv_path}/{input_filename}')
+    input_csv_path = os.path.join(os.path.dirname(__file__), "data/preprocessed")
+    data = pd.read_csv(f'{input_csv_path}/review_pp.csv')
 
     # Creating user / reviews dict
     print("Creating user and reviews dict...")
@@ -49,20 +49,25 @@ def setup_test_data(min_reviews=2, input_folder="data/preprocessed", input_filen
     print("Saving test input dataframe...")
 
     # timestamp = '{:%Y%m%d_%H%M}'.format(datetime.datetime.now())
-    output_csv_path = os.path.join(os.path.dirname(__file__), output_folder)
+    output_csv_path = os.path.join(os.path.dirname(__file__), "data/test")
     test_df.to_csv(f'{output_csv_path}/test_inputs.csv', index=False)
 
     return test_df
 
 
-def run_test(predict=False, input_filename="test_inputs.csv", folder="data/test"):
+def run_test(predict=False, sample=None):
     """ Running the test, by computing predictions and preparing the result dataframe """
 
     print("Fetching the test inputs...")
-    input_csv_path = os.path.join(os.path.dirname(__file__), folder)
-    data = pd.read_csv(f'{input_csv_path}/{input_filename}')
+    input_csv_path = os.path.join(os.path.dirname(__file__), "data/test")
+    input_data = pd.read_csv(f'{input_csv_path}/test_inputs.csv')
 
     print("Calculating predictions...")
+
+    if sample is None:
+        data = input_data.copy()
+    else:
+        data = input_data.copy().sample(sample)
 
     if predict:
         pass
@@ -98,7 +103,7 @@ def run_test(predict=False, input_filename="test_inputs.csv", folder="data/test"
     print("Saving results dataframe...")
 
     # timestamp = '{:%Y%m%d_%H%M}'.format(datetime.datetime.now())
-    csv_path = os.path.join(os.path.dirname(__file__), folder)
+    csv_path = os.path.join(os.path.dirname(__file__), "data/test")
     data.to_csv(f'{csv_path}/test_outputs.csv', index=False)
 
     print("Calculating metrics for tests...")

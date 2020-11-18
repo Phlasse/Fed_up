@@ -10,13 +10,13 @@ from Fed_up import recipe
 LIST_COLS = {}
 
 
-def get_raw_data(folder="data/raw", filename="RAW_interactions.csv"):
+def get_raw_data():
     """ Reading interaction data from CSV and evaluating list cols """
     print('Reading interaction data from CSV and evaluating list cols...')
 
     converters = {col: eval for col in LIST_COLS}
-    csv_path = os.path.join(os.path.dirname(__file__), folder)
-    raw_df = pd.read_csv(f'{csv_path}/{filename}', converters=converters)
+    csv_path = os.path.join(os.path.dirname(__file__), "data/raw")
+    raw_df = pd.read_csv(f'{csv_path}/RAW_interactions.csv', converters=converters)
     return raw_df
 
 
@@ -24,13 +24,19 @@ def select_universe(df, recipe_df=None):
     """ Selecting relevant universe of reviews """
     print('Selecting relevant universe of reviews...')
 
-    # Removing reviews of excluded recipes
-    if recipe_df is not None and isinstance(recipe_df, pd.DataFrame):
-        recipe_ids = list(recipe_df['recipe_id'].sort_values())
-        df = df[df['recipe_id'].isin(recipe_ids)]
-
     # Only keeping positive ratings
     df = df[df['rating'] > 0]
+
+    # Removing reviews of excluded recipes
+    if recipe_df is not None and isinstance(recipe_df, pd.DataFrame):
+        recipe_ids = set(recipe_df['recipe_id'])
+        df = df[df['recipe_id'].isin(recipe_ids)]
+
+    # Removing recipes with unique user reviews
+    count_df = df.groupby(by="user_id").count()
+    count_df = count_df[count_df.rating < 2].reset_index()
+    users_to_remove = set(count_df.user_id)
+    df = df[~df.user_id.isin(users_to_remove)]
 
     return df.dropna()
 
