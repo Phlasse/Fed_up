@@ -9,7 +9,6 @@ dist/
 groupama/data/base_pno.*
 .DS_Store
 .idea/
-Fed_up/data/raw/
-Fed_up/data/preprocessed/
+Fed_up/data/
 .env
 *csv

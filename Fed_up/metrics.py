@@ -6,14 +6,12 @@ import pandas as pd
 
 
 def rating_mae(data):
-    data['rating_lin'] = (data['rating'] - 1) / 4
-    mae = np.mean(np.abs(data['rating_lin'] - data['rec_score']))
+    mae = np.mean(np.abs(data['rating'] - data['rec_rating']))
     return np.round(mae, 3)
 
 
-def rating_le(data, dif_threshold=0.25):
-    data['rating_lin'] = (data['rating'] - 1) / 4
-    le = [1 if (data.loc[index, 'rating_lin'] - data.loc[index, 'rec_score']) >= dif_threshold else 0 for index, row in data.iterrows()]
+def rating_le(data, dif_threshold=1):
+    le = [1 if (data.loc[index, 'rating'] - data.loc[index, 'rec_rating']) > dif_threshold else 0 for index, row in data.iterrows()]
     return np.round(sum(le) / len(le), 3)
 
 

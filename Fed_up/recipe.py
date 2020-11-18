@@ -58,14 +58,38 @@ def select_universe(df):
                 ingredients_dict[j] += 1
 
     # Recipes containing too specific ingredients will be removed
-    low_use_ingredients = [i for i, count in ingredients_dict.items() if count < 2]
+    low_use_ingredients = [i for i, count in ingredients_dict.items() if count <= 5]
     print(f"> Removing rows with too specific ingredients now ({len(low_use_ingredients)})...")
     review_merge_df = __remove_list_from_df(review_merge_df, low_use_ingredients, "ingredients")
 
-    # Removing drinks and icecream recipes using tags
-    drink_tags = ["cocktails", "punch", "non-alcoholic", "ice-cream", "brewing", "beverages", "smoothies"]
-    print(f"> Removing rows with drinks tags now ({len(drink_tags)})...")
-    review_merge_df = __remove_list_from_df(review_merge_df, drink_tags, "tags")
+    print("> Creating tags for filtering...")
+    tags = review_merge_df["tags"]
+
+    tags_dict = {}
+    for i in tags:
+        for j in i:
+            if j not in tags_dict.keys():
+                tags_dict[j] = 1
+            else:
+                tags_dict[j] += 1
+
+    # Recipes containing too specific tags will be removed
+    low_use_tags = [i for i, count in tags_dict.items() if count <= 5]
+    print(f"> Removing rows with too specific tags now ({len(low_use_tags)})...")
+    review_merge_df = __remove_list_from_df(review_merge_df, low_use_tags, "tags")
+
+    # Removing breakfasts, desserts, drinks and icecream, etc. recipes using tags
+    exclusion_tags = ['desserts', 'breakfast', 'cookies-and-brownies','beverages','brewing', 'syrup', \
+                      'chocolate', 'snacks', 'berries', 'cocktails', 'bar-cookies', 'muffins', 'puddings-and-mousses',\
+                      'candy','pancakes-and-waffles','strawberries','frozen-desserts','rolls-biscuits',\
+                      'hand-formed-cookies','smoothies','pitted-fruit','cheesecake','blueberries','granola-and-porridge',\
+                      'cobblers-and-crisps','raspberries','coffee-cakes','brownies','punch','rolled-cookies',\
+                      'cupcakes','shakes','fudge','cherries','crusts-pastry-dough-2','non-alcoholic','jellies',\
+                      'kiwifruit','chocolate-chip-cookies','ice-cream','oatmeal','fillings-and-frostings-chocolate',\
+                      'sugar-cookies', 'halloween-cupcakes','halloween-cakes','halloween-cocktails']
+
+    print(f"> Removing rows with excluded tags now ({len(exclusion_tags)})...")
+    review_merge_df = __remove_list_from_df(review_merge_df, exclusion_tags, "tags")
 
     # Removing outliers by cooking time and number of ingredients
     print("> Removing rows with outliers from dataframe now...")
@@ -143,9 +167,9 @@ def generate_preprocessed_data(folder="data/preprocessed"):
     recipes = get_data()
     reviews = review.get_data(recipes)
 
-    timestamp = '{:%Y%m%d_%H%M}'.format(datetime.datetime.now())
-    recipes.to_csv(f'{csv_path}/recipe_pp_{timestamp}.csv', index=False)
-    reviews.to_csv(f'{csv_path}/review_pp_{timestamp}.csv', index=False)
+    # timestamp = '{:%Y%m%d_%H%M}'.format(datetime.datetime.now())
+    recipes.to_csv(f'{csv_path}/recipe_pp.csv', index=False)
+    reviews.to_csv(f'{csv_path}/review_pp.csv', index=False)
 
     return recipes, reviews
 
@@ -157,9 +181,9 @@ def generate_sample_data(folder="data/samples", size=2000):
     recipes_sample = recipes.sample(size)
     reviews_sample = review.get_data(recipes_sample)
 
-    timestamp = '{:%Y%m%d_%H%M}'.format(datetime.datetime.now())
-    recipes_sample.to_csv(f'{csv_path}/recipe_sample_{timestamp}.csv', index=False)
-    reviews_sample.to_csv(f'{csv_path}/review_sample_{timestamp}.csv', index=False)
+    #timestamp = '{:%Y%m%d_%H%M}'.format(datetime.datetime.now())
+    recipes_sample.to_csv(f'{csv_path}/recipe_sample.csv', index=False)
+    reviews_sample.to_csv(f'{csv_path}/review_sample.csv', index=False)
 
     return recipes_sample, reviews_sample
 
