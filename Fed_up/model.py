@@ -10,12 +10,23 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 
-def get_one_recommendation(recipe, n_recommendations = 500):
+def get_df_4_model(user_id, n_recommendations = 20000):
+    '''this function generates the latent dataframes used for the prediction model'''
+    # First the data needs to be loaded
+    print('Generating dataframe for recommendation model')
+    recipes_df_raw = pd.read_csv("data/preprocessed/recipe_pp_20201118_1206.csv")#.sample(n=n_recommendations, random_state=1)
+    reviews_df_raw = pd.read_csv("data/preprocessed/review_pp_20201118_1206.csv")
+    print(f'{len(recipes_df_raw.ingredients)} recipes are being considered for recommendation')
+    # !! currently the df is way to big, so we need to take a sample, but ensure that the recipes the user likes are used for finding similarities later
+    # For this I will create a sample df without user recipes and concatenate the a df with only user liked recipes
 
-    recipes_df_raw = pd.read_csv("data/preprocessed/data_preprocessed_recipe_pp_20201117_1347.csv").sample(n=n_recommendations, random_state=1)
-    reviews_df_raw = pd.read_csv("data/preprocessed/data_preprocessed_review_pp_20201117_1347.csv")
+    user_rates = [i for i in reviews_df_raw[reviews_df_raw.user_id == user_id].recipe_id] # generate a list of user rated recipes
 
-    merge_df = pd.merge(recipes_df_raw[['recipe_id', 'metadata']], reviews_df_raw, on="recipe_id", how="right").dropna()
+    sample_df_no_user = recipes_df_raw[~recipes_df_raw.recipe_id.isin(user_rates)].sample(n=n_recommendations, random_state=1)
+    recipe_df_w_user = recipes_df_raw[recipes_df_raw.recipe_id.isin(user_rates)]
+
+    recipes_df_user = pd.concat([sample_df_no_user, recipe_df_w_user], axis=0)
+    merge_df = pd.merge(recipes_df_user[['recipe_id', 'metadata']], reviews_df_raw, on="recipe_id", how="right").dropna()
     recipes_df = merge_df[['recipe_id', 'metadata']].groupby(by="recipe_id").first().reset_index()
     reviews_df = merge_df.drop(['metadata'], axis="columns").reset_index()
 
@@ -46,19 +57,23 @@ def get_one_recommendation(recipe, n_recommendations = 500):
 
     index_list = reviews_df.groupby(by="recipe_id").mean().index.tolist()
     latent_df_2 = pd.DataFrame(latent_df_2, index=index_list)
+
+    return latent_df, latent_df_2, user_rates
+
+def get_one_recommendation(recipe_id, latent_1, latent_2, n_recommendations):
     # applying Cosine similarity
     # Get the latent vectors for recipe_id:"45119" from content and collaborative matrices
-    v1 = np.array(latent_df.loc[recipe]).reshape(1, -1)
-    v2 = np.array(latent_df_2.loc[recipe]).reshape(1, -1)
+    v1 = np.array(latent_1.loc[recipe_id]).reshape(1, -1)
+    v2 = np.array(latent_2.loc[recipe_id]).reshape(1, -1)
 
 # Compute the cosine similartity of this movie with the others in the list
-    sim1 = cosine_similarity(latent_df, v1).reshape(-1)
-    sim2 = cosine_similarity(latent_df_2, v2).reshape(-1)
+    sim1 = cosine_similarity(latent_1, v1).reshape(-1)
+    sim2 = cosine_similarity(latent_2, v2).reshape(-1)
 
     hybrid = ((sim1 + sim2)/2.0)
 
     dictDf = {'content': sim1 , 'collaborative': sim2, 'hybrid': hybrid}
-    recommendation_df = pd.DataFrame(dictDf, index = latent_df.index)
+    recommendation_df = pd.DataFrame(dictDf, index = latent_1.index)
 
     recommendation_df.sort_values('hybrid', ascending=False, inplace=True)
     recommendation_df.head(10)
@@ -69,17 +84,11 @@ def get_user_recommendations(user_id, n_recommendations = 500):
     '''thi function gets the recommendations fo one user by taking all of its liked and disliked dishes,
      getting the recommendation based on each recipe and then summing the scores'''
 
-    recipes_df = pd.read_csv("data/preprocessed/data_preprocessed_recipe_pp_20201117_1347.csv").sample(n=n_recommendations, random_state=1)
-    reviews_df = pd.read_csv("data/preprocessed/data_preprocessed_review_pp_20201117_1347.csv").sample(n=n_recommendations, random_state=1)
+    # !!!!!!!!!! this function still assumes the user ONLY liked recipes
+    # !!!!!!!!!! No dislikes are considered so far!
+    latent_1, latent_2, recipe_list = get_df_4_model(user_id)#, n_recommendations)
 
-    # finding the user's recommended dishes and creating a list'
-    recipe_list = [i for i in reviews_df[reviews_df.user_id==user_id].recipe_id]
-    actual_list = []
-    for i in range(len(recipe_list)):
-        if recipe_list[i] in recipes_df.recipe_id.tolist() and recipe_list[i] in reviews_df.recipe_id.tolist():
-            actual_list.append(recipe_list[i])
-    # running the get recommendations for each recipe id the user liked
-    recommendations = [get_one_recommendation(i, n_recommendations) for i in actual_list]
+    recommendations = [get_one_recommendation(i, latent_1, latent_2, n_recommendations) for i in recipe_list]# actual_list]
     #concetenate the list to a big df
     recommendations_df=pd.concat(recommendations)
     # sum the scores using groupby
@@ -87,11 +96,28 @@ def get_user_recommendations(user_id, n_recommendations = 500):
     return grouped_recommendations
     #return recipe_list
 
+def get_superuser_recommendation(n_recommendations=100):
+    user_id = 424680
+    n_recommendations=100
+
+    latent_1, latent_2, recipe_list = get_df_4_model(user_id, n_recommendations)
+
+    recipe_list = recipe_list[0:10]
+
+    recommendations = [get_one_recommendation(i, latent_1, latent_2, n_recommendations) for i in recipe_list]# actual_list]
+    #concetenate the list to a big df
+    recommendations_df=pd.concat(recommendations)
+    # sum the scores using groupby
+    grouped_recommendations= recommendations_df.groupby(by="recipe_id").sum().sort_values(by="hybrid", ascending=False)
+
+    print(f'The recommendation results are based on {len(recipe_list)} recipes the user liked or disliked')
+
+    return grouped_recommendations[0:30]
+
 
 if __name__ == "__main__":
-    #print(get_one_recommendation())
-    result = get_user_recommendations(424680, n_recommendations=15000)
-    #reviews_df = pd.read_csv("data/preprocessed/data_preprocessed_review_pp_20201117_1347.csv").sample(n=10000, random_state=9).reset_index().groupby("user_id").count().sort_values(by="rating", ascending=False)
+
+    result = get_superuser_recommendation(n_recommendations=100)
+
+    print('Here are the top results for the user:')
     print(result)
-    #plt.hist(result.hybrid, bins=50)
-    #plt.show()
