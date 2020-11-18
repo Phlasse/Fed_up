@@ -10,18 +10,20 @@ import datetime
 from Fed_up.metrics import get_scoring_metrics
 
 
-def setup_test_data(min_reviews=2, folder="data/preprocessed", filename="review_pp.csv"):
+def setup_test_data(min_reviews=2, input_folder="data/preprocessed", input_filename="review_pp.csv", output_folder="data/test"):
     """ Creating a dataframe per user with the inputs and target for testing """
 
     # Fetching the review dataframe
     print("Fetching the review dataframe...")
-    load_csv_path = os.path.join(os.path.dirname(__file__), folder)
-    data = pd.read_csv(f'{load_csv_path}/{filename}')
+    input_csv_path = os.path.join(os.path.dirname(__file__), input_folder)
+    data = pd.read_csv(f'{input_csv_path}/{input_filename}')
 
     # Creating user / reviews dict
     print("Creating user and reviews dict...")
     user_reviews = data.groupby('user_id') \
-                       .agg({'recipe_id': (lambda x: list(x)), 'liked': (lambda x: list(x))}) \
+                       .agg({'recipe_id': (lambda x: list(x)),
+                             'rating': (lambda x: list(x)),
+                             'liked': (lambda x: list(x))}) \
                        .reset_index()
 
     # Selecting only users with at least min_reviews (2 by default)
@@ -38,52 +40,66 @@ def setup_test_data(min_reviews=2, folder="data/preprocessed", filename="review_
         user = row['user_id']
         target = row['recipe_id'][-1]
         liked = row['liked'][-1]
-        rating = data.loc[target, 'rating']
+        rating = row['rating'][-1]
         inputs = {row['recipe_id'][i]: row['liked'][i] for i in range(len(row['recipe_id']) - 1)}
 
         new_row = {'user_id': user, 'inputs': inputs, 'target': target, 'rating': rating, 'liked': liked}
         test_df = test_df.append(new_row, ignore_index=True)
 
+    print("Saving test input dataframe...")
+
+    # timestamp = '{:%Y%m%d_%H%M}'.format(datetime.datetime.now())
+    output_csv_path = os.path.join(os.path.dirname(__file__), output_folder)
+    test_df.to_csv(f'{output_csv_path}/test_inputs.csv', index=False)
+
     return test_df
 
 
-def run_test(data, test=True, folder="data/test"):
+def run_test(predict=False, input_filename="test_inputs.csv", folder="data/test"):
     """ Running the test, by computing predictions and preparing the result dataframe """
+
+    print("Fetching the test inputs...")
+    input_csv_path = os.path.join(os.path.dirname(__file__), folder)
+    data = pd.read_csv(f'{input_csv_path}/{input_filename}')
 
     print("Calculating predictions...")
 
-    if test:
+    if predict:
+        pass
+    else:
         ln = lognorm.rvs(0.2, size=data.shape[0])
         predictions = (ln - ln.min()) / (ln.max() - ln.min())
 
     print("Preparing results dataframe...")
 
     data['rec_score'] = predictions
-    data['rec_rating'] = np.round(1 + data['rec_score'] * 4).astype(int)
+    data['rec_rating'] = __convert_to_rating(data[['rating', 'rec_score']])
     data['rec_liked'] = 0
     data['rec_classify'] = ''
 
-    for index, row in data.iterrows():
-        actual = data.loc[index, 'liked']
-        predict = data.loc[index, 'rec_liked']
+    print("Iterating and filling results dataframe...")
 
+    for index, row in data.iterrows():
         if data.loc[index, 'rec_rating'] >= 4:
             data.loc[index, 'rec_liked'] = 1
 
-        if predict == 1 and actual == 1:
+        actual = data.loc[index, 'liked'] == 1
+        predict = data.loc[index, 'rec_liked'] == 1
+
+        if predict and actual:
             data.loc[index, 'rec_classify'] = 'TP'
-        elif predict == 1 and actual == 0:
+        elif predict and not actual:
             data.loc[index, 'rec_classify'] = 'FP'
-        elif predict == 0 and actual == 0:
+        elif not predict and not actual:
             data.loc[index, 'rec_classify'] = 'TN'
-        elif predict == 0 and actual == 1:
+        elif not predict and actual:
             data.loc[index, 'rec_classify'] = 'FN'
 
     print("Saving results dataframe...")
 
-    timestamp = '{:%Y%m%d_%H%M}'.format(datetime.datetime.now())
+    # timestamp = '{:%Y%m%d_%H%M}'.format(datetime.datetime.now())
     csv_path = os.path.join(os.path.dirname(__file__), folder)
-    data.to_csv(f'{csv_path}/test_{timestamp}.csv', index=False)
+    data.to_csv(f'{csv_path}/test_outputs.csv', index=False)
 
     print("Calculating metrics for tests...")
 
@@ -93,9 +109,19 @@ def run_test(data, test=True, folder="data/test"):
     return data, metrics
 
 
+def __convert_to_rating(data):
+    cumdist = data.groupby('rating')['rating'] \
+                  .count().sort_index().cumsum() / len(data)
+
+    new_rating = pd.qcut(data['rec_score'], \
+                         q=[0.0] + list(cumdist.values), \
+                         labels=list(cumdist.index)).astype(int)
+    return new_rating
+
+
 if __name__ == "__main__":
     user_data = setup_test_data()
-    test_data, test_metrics = run_test(user_data)
+    test_data, test_metrics = run_test()
 
     print("")
     print("********************")
