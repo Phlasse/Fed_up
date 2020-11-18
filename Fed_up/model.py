@@ -58,8 +58,8 @@ def get_df_4_model(user_id, n_recommendations = 20000):
     index_list = reviews_df.groupby(by="recipe_id").mean().index.tolist()
     latent_df_2 = pd.DataFrame(latent_df_2, index=index_list)
 
-    latent_df.to_csv(f'data/latents/latent_content.csv', index=False)
-    latent_df_2.to_csv(f'data/latents/latent_rating.csv', index=False)
+    latent_df.to_csv(f'data/latents/latent_content.csv', index=True)
+    latent_df_2.to_csv(f'data/latents/latent_rating.csv', index=True)
 
 
     return latent_df, latent_df_2, user_rates
@@ -120,7 +120,7 @@ def get_superuser_recommendation(n_recommendations=100):
 
 if __name__ == "__main__":
 
-    result = get_superuser_recommendation(n_recommendations=10000)
+    result = get_superuser_recommendation(n_recommendations=4000)
 
     print('Here are the top results for the user:')
     print(result)
