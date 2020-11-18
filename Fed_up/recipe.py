@@ -39,11 +39,13 @@ def select_universe(df):
 
     csv_path = os.path.join(os.path.dirname(__file__), folder)
     reviews_df = pd.read_csv(f'{csv_path}/{filename}')
-    count_df = reviews_df.groupby(by="user_id").count()
-    count_df = count_df[count_df.rating >1].reset_index()
-    users_to_remove = [i for i in count_df.user_id]
-    reviews_df = reviews_df[~reviews_df.user_id.isin(users_to_remove)]
     reviews_df = reviews_df[reviews_df['rating'] > 0]
+
+    print('> Removing recipes with unique user reviews...')
+    count_df = reviews_df.groupby(by="user_id").count()
+    count_df = count_df[count_df.rating < 2].reset_index()
+    users_to_remove = list(count_df.user_id)
+    reviews_df = reviews_df[~reviews_df.user_id.isin(users_to_remove)]
 
     merged_df = df.merge(reviews_df, on="recipe_id", how="inner")
     agg_df = merged_df.groupby(by="recipe_id").agg({"rating": ["mean", "count"]}).xs('rating', axis=1, drop_level=True)
