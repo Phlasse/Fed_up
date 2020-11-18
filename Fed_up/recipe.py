@@ -17,28 +17,26 @@ NUTRITION_COLS = ['calories', 'total_fat', 'sugar', 'sodium',
 LIST_COLS = ['tags', 'nutrition', 'steps', 'ingredients']
 
 
-def get_raw_data(folder="data/raw", filename="RAW_recipes.csv"):
+def get_raw_data():
     """ Reading recipe data from CSV and evaluating list cols """
     print('Reading recipe data from CSV and evaluating list cols...')
 
     converters = {col: eval for col in LIST_COLS}
-    csv_path = os.path.join(os.path.dirname(__file__), folder)
-    raw_df = pd.read_csv(f'{csv_path}/{filename}', converters=converters)
+    csv_path = os.path.join(os.path.dirname(__file__), "data/raw")
+    raw_df = pd.read_csv(f'{csv_path}/RAW_recipes.csv', converters=converters)
     return raw_df
 
 
 def select_universe(df):
     """ Selecting relevant universe of recipes """
     print('Selecting relevant universe of recipes...')
-    folder = "data/raw"
-    filename = "RAW_interactions.csv"
 
     # Load recipes and reviews and merge both tables and grouping them; drop NaN
     print('> Loading review data for universe selection...')
     df.rename(columns={"id": "recipe_id"}, inplace=True)
 
-    csv_path = os.path.join(os.path.dirname(__file__), folder)
-    reviews_df = pd.read_csv(f'{csv_path}/{filename}')
+    csv_path = os.path.join(os.path.dirname(__file__), "data/raw")
+    reviews_df = pd.read_csv(f'{csv_path}/RAW_interactions.csv')
     reviews_df = reviews_df[reviews_df['rating'] > 0]
 
     print('> Removing recipes with unique user reviews...')
@@ -148,11 +146,11 @@ def clean_data(df):
     return target_df
 
 
-def __clean_nutrition(df, col='nutrition'):
+def __clean_nutrition(df):
     """ Creating nutrition columns from list """
     print('Creating nutrition columns from list...')
 
-    numpy_col = np.array(df[col].to_list())
+    numpy_col = np.array(df['nutrition'].to_list())
 
     for index, nut_col in enumerate(NUTRITION_COLS):
         df[nut_col] = numpy_col[:, index].astype(float)
@@ -167,9 +165,9 @@ def get_data():
     return clean_data(select_universe(get_raw_data()))
 
 
-def generate_preprocessed_data(folder="data/preprocessed"):
+def generate_preprocessed_data():
     """ Automatically generating samples for recipes and reviews """
-    csv_path = os.path.join(os.path.dirname(__file__), folder)
+    csv_path = os.path.join(os.path.dirname(__file__), "data/preprocessed")
     recipes = get_data()
     reviews = review.get_data(recipes)
 
@@ -180,9 +178,9 @@ def generate_preprocessed_data(folder="data/preprocessed"):
     return recipes, reviews
 
 
-def generate_sample_data(folder="data/samples", size=2000):
+def generate_sample_data(size=2000):
     """ Automatically generating samples for recipes and reviews """
-    csv_path = os.path.join(os.path.dirname(__file__), folder)
+    csv_path = os.path.join(os.path.dirname(__file__), "data/samples")
     recipes = get_data()
     recipes_sample = recipes.sample(size)
     reviews_sample = review.get_data(recipes_sample)
@@ -197,7 +195,6 @@ def generate_sample_data(folder="data/samples", size=2000):
 if __name__ == "__main__":
     #generate_sample_data()
     generate_preprocessed_data()
-    #generate_preprocessed_data()
 
     # data = get_data()
     # print("")

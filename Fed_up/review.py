@@ -10,13 +10,13 @@ from Fed_up import recipe
 LIST_COLS = {}
 
 
-def get_raw_data(folder="data/raw", filename="RAW_interactions.csv"):
+def get_raw_data():
     """ Reading interaction data from CSV and evaluating list cols """
     print('Reading interaction data from CSV and evaluating list cols...')
 
     converters = {col: eval for col in LIST_COLS}
-    csv_path = os.path.join(os.path.dirname(__file__), folder)
-    raw_df = pd.read_csv(f'{csv_path}/{filename}', converters=converters)
+    csv_path = os.path.join(os.path.dirname(__file__), "data/raw")
+    raw_df = pd.read_csv(f'{csv_path}/RAW_interactions.csv', converters=converters)
     return raw_df
 
 
