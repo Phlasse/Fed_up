@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 from IPython.display import display
 
 
@@ -23,26 +24,6 @@ MEAT_LIST = ['meat','bacon', 'sausage', 'pork', 'chicken', 'beef', 'duck', 'lamb
              'roast-beef-main-dish','steaks','scallops','whole-chicken','whole-duck','whole-turkey','wings',\
             'main-dish-beef','main-dish-chicken','main-dish-pork','turkey-breasts','turkey-burgers','meatloaf',\
             'gumbo','lamb-sheep','lamb-sheep-main-dish', 'lardon']
-
-## Filtering User's Goals (Maintain Weight, Lose Weight, Gain Weight, Build Muscle)
-def goals_filter(df, goal):
-    goals = {
-        'maintain': { 'carb': 50.0, 'protein': 20.0, 'fat': 30.0},
-        'lose': {'carb': 30.0, 'protein': 25.0, 'fat': 45.0},
-        'gain': {'carb': 55.0, 'protein': 20.0, 'fat': 25.0},
-        'build': {'carb': 35.0, 'protein': 40.0, 'fat': 25.0}
-    }
-    filter_df = df.copy()
-
-    ## Filtering on :
-    ## 1. Goals percentage for one day intake divided by 3 => Assuming a meal
-    ## 2. Then take recipe with a range of -10% and +10% of each macronutriment for each goal
-    carb_filter = (filter_df['carbohydrates'] > goals[goal]['carb']/3 - 10.0) & (filter_df['carbohydrates'] < goals[goal]['carb']/3 + 10.0)
-    protein_filter = (filter_df['protein'] > goals[goal]['protein']/3 - 10.0) & (filter_df['protein'] < goals[goal]['protein']/3 + 10.0)
-    fat_filter = (filter_df['total_fat'] > goals[goal]['fat']/3 - 10.0) & (filter_df['total_fat'] < goals[goal]['fat']/3 + 10.0)
-
-    return filter_df[carb_filter & protein_filter & fat_filter]
-
 
 
 #LIST_DIET = ['classic', 'low carb', 'flexitarian', 'vegetarian', 'pescetarian', 'vegan']
@@ -110,6 +91,7 @@ def dislikes_filter(df, dislikes_input):
 
     return df
 
+
 ## Filtering DataFrame for manual user's dislike
 def manual_dislikes_filter(df, manual_dislikes_input):
 
@@ -121,69 +103,123 @@ def manual_dislikes_filter(df, manual_dislikes_input):
     return df
 
 
+## Filtering User's Goals (Maintain Weight, Lose Weight, Gain Weight, Build Muscle)
+def goals_filter(df, goal):
+    goals = {
+        'maintain': { 'carb': 50.0, 'protein': 20.0, 'fat': 30.0},
+        'lose': {'carb': 30.0, 'protein': 25.0, 'fat': 45.0},
+        'gain': {'carb': 55.0, 'protein': 20.0, 'fat': 25.0},
+        'build': {'carb': 35.0, 'protein': 40.0, 'fat': 25.0}
+    }
+    filter_df = df.copy()
+
+    ## Filtering on :
+    ## 1. Goals percentage for one day intake divided by 3 => Assuming a meal
+    ## 2. Then take recipe with a range of -10% and +10% of each macronutriment for each goal
+    carb_filter = (filter_df['carbohydrates'] > goals[goal]['carb']/3 - 10.0) & (filter_df['carbohydrates'] < goals[goal]['carb']/3 + 10.0)
+    protein_filter = (filter_df['protein'] > goals[goal]['protein']/3 - 10.0) & (filter_df['protein'] < goals[goal]['protein']/3 + 10.0)
+    fat_filter = (filter_df['total_fat'] > goals[goal]['fat']/3 - 10.0) & (filter_df['total_fat'] < goals[goal]['fat']/3 + 10.0)
+
+    return filter_df[carb_filter & protein_filter & fat_filter]
+
+
 ## Filtering Time to prepare the recipe with 'minutes' column of the DataFrame.
 def time_filter(df, time):
-    if time == 'up to 15 min':
-        return df[df.minutes<16]
-    elif time == 'up to 30 min':
-        return df[df.minutes<31]
-    elif time == 'up to 45 min':
-        return df[df.minutes<46]
-    elif time == 'up to 1h':
-        return df[df.minutes<61]
-    elif time == 'more than 1h':
-        return df
+    return df[df.minutes<time]
 
+
+## Filtering Time to prepare the recipe with 'minutes' column of the DataFrame.
+def step_filter(df, steps):
+    return df[df.n_steps<steps]
+
+
+def all_filters(df, goal = '', diet = '', allergies = [], dislikes = [],
+                    custom_dsl = '', time = 0, steps = 0):
+
+    if diet:
+        df = diet_filter(df, diet)
+
+    if allergies:
+        df = allergie_filter(df, allergies)
+
+    if dislikes:
+        df = dislikes_filter(df, dislikes)
+
+    if custom_dsl:
+        df = manual_dislikes_filter(df, custom_dsl)
+
+    if goal:
+        df = goals_filter(df, goal)
+
+    if time:
+        df = time_filter(df, time)
+
+    if steps:
+        df = step_filter(df, steps)
+
+    return df
 
 
 if __name__ == "__main__":
 
-    recipe_df = pd.read_csv("../Fed_up/data/preprocessed/recipe_pp.csv")
-    recipe_df = pd.read_csv(PATH_DATA+FILE_DATA)
-    
-    print('the shape of the cleaned dataframe is:')
-    print(recipe_df.shape)
-    # macronutriment_list = ['recipe_id', 'name', 'total_fat', 'protein', 'carbohydrates']
-    # goals = ['maintain', 'lose', 'gain', 'build']
+    ### TEST 1 ###
+
+    # recipe_df = pd.read_csv("../Fed_up/data/preprocessed/recipe_pp.csv")
+    # recipe_df = pd.read_csv(PATH_DATA+FILE_DATA)
+
+    # print('the shape of the cleaned dataframe is:')
+    # print(recipe_df.shape)
+    # # macronutriment_list = ['recipe_id', 'name', 'total_fat', 'protein', 'carbohydrates']
+    # # goals = ['maintain', 'lose', 'gain', 'build']
 
 
-    # print(f"Initial DataFrame Shape : {recipe_df.shape}")
-    # print("")
-    # rows = 20 ## Numbers of Rows to display in the filter DataFrame
+    # # print(f"Initial DataFrame Shape : {recipe_df.shape}")
+    # # print("")
+    # # rows = 20 ## Numbers of Rows to display in the filter DataFrame
 
-    # for goal in goals:
-    #     print(f"################# {goal.capitalize()} #################")
-    #     print(f"Shape after filtering : {goals_filter(recipe_df, goal)[macronutriment_list].shape}")
-    #     print(f"Showing {rows} first values of filtered DataFrame : ")
-    #     display(goals_filter(recipe_df, goal)[macronutriment_list].head(rows))
+    # # for goal in goals:
+    # #     print(f"################# {goal.capitalize()} #################")
+    # #     print(f"Shape after filtering : {goals_filter(recipe_df, goal)[macronutriment_list].shape}")
+    # #     print(f"Showing {rows} first values of filtered DataFrame : ")
+    # #     display(goals_filter(recipe_df, goal)[macronutriment_list].head(rows))
 
-    diet_result = diet_filter(recipe_df, 'vegan')
-    print('the shape of the dataframe given your life style is:')
-    print(diet_result.shape)
+    # diet_result = diet_filter(recipe_df, 'vegan')
+    # print('the shape of the dataframe given your life style is:')
+    # print(diet_result.shape)
 
-    allergies_input = ['milk','fish', 'tree_nuts', 'peanuts', 'wheat', 'soybeans', 'mustard']
-    allergy_result = allergie_filter(diet_result, allergies_input)
-    print('the shape of the dataframe excluding the allergies is:')
-    print(allergy_result.shape)
+    # allergies_input = ['milk','fish', 'tree_nuts', 'peanuts', 'wheat', 'soybeans', 'mustard']
+    # allergy_result = allergie_filter(diet_result, allergies_input)
+    # print('the shape of the dataframe excluding the allergies is:')
+    # print(allergy_result.shape)
 
-    dislikes_input = ['beet','eggs','cauliflower','blue cheese','mushrooms','shrimp','turnips']
-    dislikes_allergy_result = dislikes_filter(allergy_result, dislikes_input)
-    print('the shape of the dataframe excluding the allergies and the things you do not like is:')
-    print(dislikes_allergy_result.shape)
+    # dislikes_input = ['beet','eggs','cauliflower','blue cheese','mushrooms','shrimp','turnips']
+    # dislikes_allergy_result = dislikes_filter(allergy_result, dislikes_input)
+    # print('the shape of the dataframe excluding the allergies and the things you do not like is:')
+    # print(dislikes_allergy_result.shape)
 
-    manual_dislikes_input = "eggplant, milk, cheese, orange"
-    all_dislikes_result = manual_dislikes_filter(dislikes_allergy_result, manual_dislikes_input)
-    print('the shape of the dataframe excluding ALL the allergies and ALL the things you do not like is:')
-    print(all_dislikes_result.shape)
+    # manual_dislikes_input = "eggplant, milk, cheese, orange"
+    # all_dislikes_result = manual_dislikes_filter(dislikes_allergy_result, manual_dislikes_input)
+    # print('the shape of the dataframe excluding ALL the allergies and ALL the things you do not like is:')
+    # print(all_dislikes_result.shape)
 
-    time_result = time_filter(dislikes_allergy_result, 'up to 15 min')
-    print('the shape of the dataframe including the time restriction is:')
-    print(time_result.shape)
+    # time_result = time_filter(dislikes_allergy_result, 'up to 15 min')
+    # print('the shape of the dataframe including the time restriction is:')
+    # print(time_result.shape)
 
-    sample = time_result.sample(1)
+    # sample = time_result.sample(1)
 
-    print(sample['name'])
-    for ingredient in sample['ingredients']:
-        print(f"Ingredient : {ingredient}")
+    # print(sample['name'])
+    # for ingredient in sample['ingredients']:
+    #     print(f"Ingredient : {ingredient}")
 
+
+    ### TEST 2 ###
+
+    csv_path = os.path.join(os.path.dirname(__file__), "data/preprocessed")
+    recipe_df = pd.read_csv(f"{csv_path}/recipe_pp.csv")
+    filtered_df = all_filters(recipe_df, diet='pescetarian', allergies=['seafood'], dislikes=['mushrooms'],
+                                         custom_dsl='avocado, eggplant', goal='lose', time=45, steps=9)
+
+    print("Start:", recipe_df.shape)
+    print("End:", filtered_df.shape)
 
