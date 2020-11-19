@@ -58,6 +58,7 @@ def setup_test_data(min_reviews=2):
 
 def run_test(predict=True, sample=None):
     """ Running the test, by computing predictions and preparing the result dataframe """
+    pd.options.mode.chained_assignment = None
 
     print("Fetching the test inputs...")
     input_csv_path = os.path.join(os.path.dirname(__file__), "data/test")
@@ -76,7 +77,6 @@ def run_test(predict=True, sample=None):
         for index, test in data.iterrows():
             prediction_matrix = get_user_recommendations(user_inputs=eval(test['inputs']), clear_neg=False)
             prediction_row = prediction_matrix[prediction_matrix.index == test['target']]
-            # import ipdb; ipdb.set_trace()
 
             if len(prediction_row) > 0:
                 pred = float(prediction_row['rec_score'])
@@ -92,14 +92,14 @@ def run_test(predict=True, sample=None):
         predictions = (ln - ln.min()) / (ln.max() - ln.min())
 
     print("Preparing results dataframe...")
+    data['rec_score'] = predictions
 
-    data['rec_score'] = np.array(predictions)
+    print("Cleaning up failed scores...")
+    data = data[data['rec_score'] >= 0]
+
     data['rec_rating'] = __convert_to_rating(data[['rating', 'rec_score']])
     data['rec_liked'] = 0
     data['rec_classify'] = ''
-
-    print("Cleaning up failed scores...")
-    data = data[data['rec_score'] is not None]
 
     print("Iterating and filling results dataframe...")
 
@@ -143,17 +143,49 @@ def __convert_to_rating(data):
     return new_rating
 
 
+def run_recommendations(user_id=None, collaborative=0.5, clear_neg=False):
+    csv_path = os.path.join(os.path.dirname(__file__), "data")
+    test_df = pd.read_csv(f'{csv_path}/test/test_inputs.csv')
+    recipe_df = pd.read_csv(f"{csv_path}/preprocessed/recipe_pp.csv")
+
+    if user_id:
+        test_case = test_df[test_df.user_id == user_id]
+    else:
+        test_case = test_df.sample()
+
+    inputs = eval(test_case.inputs.values[0])
+
+    input_df = pd.DataFrame(columns=['recipe_id', 'liked'])
+    for recipe, liked in inputs.items():
+        input_df = input_df.append({'recipe_id': recipe, 'liked': liked}, ignore_index=True)
+
+    input_df = input_df.merge(recipe_df, on='recipe_id', how='left')\
+               [['recipe_id', 'name', 'liked']]
+
+    print(input_df)
+
+    recommendations = get_user_recommendations(user_inputs=inputs, collaborative=collaborative, clear_neg=clear_neg)
+
+    output_df = recommendations.merge(recipe_df, on='recipe_id', how='left') \
+                [['recipe_id', 'name', 'content', 'collaborative', 'hybrid', 'rec_score']]
+
+    print(output_df.head(10))
+
+    return input_df, output_df
+
 
 if __name__ == "__main__":
     # user_data = setup_test_data()
-    test_data, test_metrics = run_test(sample=100)
+    input_df, output_df = run_recommendations(user_id=235291)
 
-    print("")
-    print("********************")
-    print('Rows:', test_data.shape[0])
-    print('Cols:', test_data.shape[1])
-    print("")
-    print(test_data.info())
-    print("")
-    print("Test results:")
-    print(test_metrics)
+    # test_data, test_metrics = run_test(sample=2000)
+
+    # print("")
+    # print("********************")
+    # print('Rows:', test_data.shape[0])
+    # print('Cols:', test_data.shape[1])
+    # print("")
+    # print(test_data.info())
+    # print("")
+    # print("Test results:")
+    # print(test_metrics)
