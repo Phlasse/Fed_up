@@ -3,6 +3,7 @@
 import os
 import numpy as np
 import pandas as pd
+from IPython.display import display
 
 from scipy.stats import lognorm
 import datetime
@@ -75,17 +76,17 @@ def run_test(predict=True, sample=None):
         predictions = list()
 
         for index, test in data.iterrows():
-            prediction_matrix = get_user_recommendations(user_inputs=eval(test['inputs']), clear_neg=False, forced_recipes=[test['target']])
+            prediction_matrix = get_user_recommendations(user_inputs=eval(test['inputs']), clear_neg=False, user_id=test['user_id'], forced_recipes=[test['target']])
             prediction_row = prediction_matrix[prediction_matrix.index == test['target']]
 
             if len(prediction_row) > 0:
                 pred = float(prediction_row['rec_score'])
                 predictions.append(np.round(pred, 3))
-                print(f"> Prediction for user {test['user_id']} done: {pred}!")
+                print(f"> ({index}) Prediction for user {test['user_id']} done: {pred}!")
 
             else:
                 predictions.append(None)
-                print(f"> Prediction for user {test['user_id']} not found!")
+                print(f"> ({index}) Prediction for user {test['user_id']} not found!")
 
     else:
         ln = lognorm.rvs(0.2, size=data.shape[0])
@@ -162,14 +163,14 @@ def run_recommendations(user_id=None, collaborative=0.5, clear_neg=False):
     input_df = input_df.merge(recipe_df, on='recipe_id', how='left')\
                [['recipe_id', 'name', 'liked']]
 
-    print(input_df)
+    display(input_df)
 
     recommendations = get_user_recommendations(user_inputs=inputs, collaborative=collaborative, clear_neg=clear_neg)
 
     output_df = recommendations.merge(recipe_df, on='recipe_id', how='left') \
                 [['recipe_id', 'name', 'content', 'collaborative', 'hybrid', 'rec_score']]
 
-    print(output_df.head(10))
+    display(output_df.head(10))
 
     return input_df, output_df
 
@@ -178,7 +179,7 @@ if __name__ == "__main__":
     # user_data = setup_test_data()
     # input_df, output_df = run_recommendations(user_id=235291)
 
-    test_data, test_metrics = run_test(sample=100)
+    test_data, test_metrics = run_test(sample=1_000)
 
     print("")
     print("********************")

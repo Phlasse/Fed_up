@@ -12,29 +12,44 @@ from Fed_up import filters
 TEST_USER = {505777: 1, 11126: 1, 506678: 1, 546: 1, 14111: 1, 87461: 1, 834: 0, 11976: 1, 536726: 0}
 
 
-def __create_latent_matrices(pool = 2000, content_reduction = 250, rating_reduction = 800, user_inputs = None, forced_recipes = []):
+def __create_latent_matrices(pool = 2000, content_reduction = 250, rating_reduction = 800,
+                             user_inputs = None, user_id = None, forced_recipes = [],
+                             goal = '', diet = '', allergies = [], dislikes = [],
+                             custom_dsl = '', time = None, steps = None):
+
     ''' Generates the latent dataframes used for the prediction model '''
 
     #### First the data needs to be loaded
     if user_inputs is None:
         user_inputs = TEST_USER
-    user_recipes = list(user_inputs.keys()) + forced_recipes
+    user_recipes = list(user_inputs.keys())
 
     csv_path = os.path.join(os.path.dirname(__file__), "data/preprocessed")
     recipes_df_raw = pd.read_csv(f"{csv_path}/recipe_pp.csv")
     reviews_df_raw = pd.read_csv(f"{csv_path}/review_pp.csv")
 
+    # For test purposes only
+    if forced_recipes and user_id:
+        for fr in forced_recipes:
+            reviews_df_raw = reviews_df_raw[~((reviews_df_raw['recipe_id'] == fr) & (reviews_df_raw['user_id'] == user_id))]
+
     user_recipe_df = recipes_df_raw[recipes_df_raw.recipe_id.isin(user_recipes)]
-    other_recipes_df = recipes_df_raw[~recipes_df_raw.recipe_id.isin(user_recipes)]
+    other_recipes_df = recipes_df_raw[~recipes_df_raw.recipe_id.isin(user_recipes + forced_recipes)]
+    forced_recipes_df = recipes_df_raw[recipes_df_raw.recipe_id.isin(forced_recipes)]
+
+    sample = np.min(pool, (len(other_recipes_df) + len(forced_recipes_df)))
+    target_df = pd.concat([other_recipes_df.sample(sample - len(forced_recipes_df)), forced_recipes_df], axis=0)
+    # print(target_df.shape)
 
     ### Filter method here:
-    # filtered_df = filters.allergie_filter(["milk", "eggs"], other_recipes_df)
+    filtered_df = filters.all_filters(target_df, goal=goal, diet=diet, allergies=allergies, dislikes=dislikes,
+                                                 custom_dsl=custom_dsl, time=time, steps=steps)
     # print(filtered_df.shape)
 
-    input_df = pd.concat([user_recipe_df, other_recipes_df.sample(pool, random_state=1)], axis=0)
+    input_df = pd.concat([user_recipe_df, filtered_df], axis=0)
     # print(input_df.shape)
 
-    merge_df = pd.merge(input_df[['recipe_id', 'metadata']], reviews_df_raw, on="recipe_id", how="right").dropna()
+    merge_df = pd.merge(input_df[['recipe_id', 'metadata']], reviews_df_raw, on="recipe_id", how="left").dropna()
     recipes_df = merge_df[['recipe_id', 'metadata']].groupby(by="recipe_id").first().reset_index()
     reviews_df = merge_df.drop(['metadata'], axis="columns").reset_index()
     # print(recipes_df.shape)
@@ -56,7 +71,7 @@ def __create_latent_matrices(pool = 2000, content_reduction = 250, rating_reduct
 
     ##################################################################
     #### Using user ratings to create content based latent matrix ####
-    #### use dimension reduction with runcatedSVD                 ####
+    #### use dimension reduction with TruncatedSVD                 ####
     ##################################################################
 
     ratings_basis = pd.merge(recipes_df[['recipe_id']], reviews_df, on="recipe_id", how="right")
@@ -94,14 +109,18 @@ def get_one_recommendation(recipe_id, latent_1, latent_2, collaborative=0.5):
     return recommendation_df
 
 
-def get_user_recommendations(user_inputs=None, n_recommendations=None, collaborative=0.5, clear_neg=False, forced_recipes=[]):
+def get_user_recommendations(user_inputs = None, n_recommendations = None, collaborative = 0.5,
+                             clear_neg = False, user_id = None, forced_recipes = [],
+                             goal = '', diet = '', allergies = [], dislikes = [],
+                             custom_dsl = '', time = None, steps = None):
+
     ''' Gets the recommendations for one user by taking all of its liked and disliked dishes,
         getting the recommendation based on each recipe and then summing the scores '''
 
     if user_inputs is None:
         user_inputs = TEST_USER
 
-    content_latent, rating_latent = __create_latent_matrices(2000, 250, 800, user_inputs, forced_recipes)
+    content_latent, rating_latent = __create_latent_matrices(user_inputs = user_inputs, user_id = user_id, forced_recipes = forced_recipes)
 
     user_likes = []
     user_dislikes = []
