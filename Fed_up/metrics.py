@@ -56,9 +56,9 @@ def like_f1(data):
 
 
 def get_scoring_metrics(data, dif_threshold=1):
-    return {'rating_mae': rating_mae(tdata),
-            'rating_le': rating_le(tdata, dif_threshold=dif_threshold),
-            'like_accuracy': like_accuracy(tdata),
-            'like_precision': like_precision(tdata),
-            'like_recall': like_recall(tdata),
-            'like_f1': like_f1(tdata)}
+    return {'rating_mae': rating_mae(data),
+            'rating_le': rating_le(data, dif_threshold=dif_threshold),
+            'like_accuracy': like_accuracy(data),
+            'like_precision': like_precision(data),
+            'like_recall': like_recall(data),
+            'like_f1': like_f1(data)}
