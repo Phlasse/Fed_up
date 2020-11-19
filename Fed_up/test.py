@@ -8,6 +8,7 @@ from scipy.stats import lognorm
 import datetime
 
 from Fed_up.metrics import get_scoring_metrics
+from Fed_up.model import get_user_recommendations
 
 
 def setup_test_data(min_reviews=2):
@@ -55,7 +56,7 @@ def setup_test_data(min_reviews=2):
     return test_df
 
 
-def run_test(predict=False, sample=None):
+def run_test(predict=True, sample=None):
     """ Running the test, by computing predictions and preparing the result dataframe """
 
     print("Fetching the test inputs...")
@@ -70,17 +71,35 @@ def run_test(predict=False, sample=None):
         data = input_data.copy().sample(sample)
 
     if predict:
-        pass
+        predictions = list()
+
+        for index, test in data.iterrows():
+            prediction_matrix = get_user_recommendations(user_inputs=eval(test['inputs']), clear_neg=False)
+            prediction_row = prediction_matrix[prediction_matrix.index == test['target']]
+            # import ipdb; ipdb.set_trace()
+
+            if len(prediction_row) > 0:
+                pred = float(prediction_row['rec_score'])
+                predictions.append(np.round(pred, 3))
+                print(f"> Prediction for user {test['user_id']} done: {pred}!")
+
+            else:
+                predictions.append(None)
+                print(f"> Prediction for user {test['user_id']} not found!")
+
     else:
         ln = lognorm.rvs(0.2, size=data.shape[0])
         predictions = (ln - ln.min()) / (ln.max() - ln.min())
 
     print("Preparing results dataframe...")
 
-    data['rec_score'] = predictions
+    data['rec_score'] = np.array(predictions)
     data['rec_rating'] = __convert_to_rating(data[['rating', 'rec_score']])
     data['rec_liked'] = 0
     data['rec_classify'] = ''
+
+    print("Cleaning up failed scores...")
+    data = data[data['rec_score'] is not None]
 
     print("Iterating and filling results dataframe...")
 
@@ -102,9 +121,9 @@ def run_test(predict=False, sample=None):
 
     print("Saving results dataframe...")
 
-    # timestamp = '{:%Y%m%d_%H%M}'.format(datetime.datetime.now())
+    timestamp = '{:%Y%m%d_%H%M}'.format(datetime.datetime.now())
     csv_path = os.path.join(os.path.dirname(__file__), "data/test")
-    data.to_csv(f'{csv_path}/test_outputs.csv', index=False)
+    data.to_csv(f'{csv_path}/test_outputs_{timestamp}.csv', index=False)
 
     print("Calculating metrics for tests...")
 
@@ -124,9 +143,10 @@ def __convert_to_rating(data):
     return new_rating
 
 
+
 if __name__ == "__main__":
-    user_data = setup_test_data()
-    test_data, test_metrics = run_test()
+    # user_data = setup_test_data()
+    test_data, test_metrics = run_test(sample=100)
 
     print("")
     print("********************")
