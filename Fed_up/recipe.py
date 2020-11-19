@@ -73,7 +73,7 @@ def select_universe(df):
                       'cobblers-and-crisps','raspberries','coffee-cakes','brownies','punch','rolled-cookies',\
                       'cupcakes','shakes','fudge','cherries','crusts-pastry-dough-2','non-alcoholic','jellies',\
                       'kiwifruit','chocolate-chip-cookies','ice-cream','oatmeal','fillings-and-frostings-chocolate',\
-                      'sugar-cookies', 'halloween-cupcakes','halloween-cakes','halloween-cocktails']
+                      'sugar-cookies', 'halloween-cupcakes','halloween-cakes','halloween-cocktails','appetizers']
 
     print(f"> Removing rows with excluded tags now ({len(exclusion_tags)})...")
     df = __remove_list_from_df(df, exclusion_tags, "tags")

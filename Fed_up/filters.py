@@ -45,12 +45,24 @@ def goals_filter(df, goal):
 
 
 
-def tags_filter(df, tags):
-    pass
+#LIST_DIET = ['classic', 'low carb', 'flexitarian', 'vegetarian', 'pescetarian', 'vegan']
+def diet_filter(df, diet):
+    if diet == 'classic':
+        return df
+    elif diet == 'vegan':
+        return df[df["tags"].str.contains(diet)]
+    elif diet == 'vegetarian':
+        return df[(df["tags"].str.contains(diet)) | (df["ingredients"].str.contains(diet))]
+    elif diet == 'pescetarian':
+        for meat in MEAT_LIST:
+            df = df[(~df["tags"].str.contains(meat))&(~df["ingredients"].str.contains(meat))]
+        return df
+    elif diet == 'low-carb':
+        return df[df["tags"].str.contains(diet)]
 
 
 ## Filtering DataFrame if User's has(ve) allergy(ies)
-def allergie_filter(allergies_input, df):
+def allergie_filter(df, allergies_input):
 
     allergies = {
         'milk': MILK_lIST,
@@ -71,8 +83,46 @@ def allergie_filter(allergies_input, df):
 
     return df
 
+
+## Filtering DataFrame with Users' dislikes
+def dislikes_filter(df, dislikes_input):
+
+    dislikes = {
+        'beets': ['beet'],
+        'bell peppers': ['bell pepper'],
+        'blue cheese': ['blue cheese'],
+        'brussels sprouts': ['brussels sprout'],
+        'cauliflower': ['cauliflower'],
+        'eggs': ['eggs'],
+        'goat cheese': ['goat cheese'],
+        'mushrooms': ['mushroom'],
+        'olives':['olive'],
+        'quinoa':['quinoa'],
+        'shrimp':['shrimp'],
+        'tofu':['tofu'],
+        'turnips':['turnip']
+    }
+
+    for dislike, ingredients in dislikes.items():
+        if dislike in dislikes_input:
+            for ingredient in ingredients:
+                df = df[~df['ingredients'].str.contains(ingredient)]
+
+    return df
+
+## Filtering DataFrame for manual user's dislike
+def manual_dislikes_filter(df, manual_dislikes_input):
+
+    ingredients = manual_dislikes_input.split(", ")
+
+    for ingredient in ingredients:
+        df = df[~df['ingredients'].str.contains(ingredient)]
+
+    return df
+
+
 ## Filtering Time to prepare the recipe with 'minutes' column of the DataFrame.
-def time_filter(time, df):
+def time_filter(df, time):
     if time == 'up to 15 min':
         return df[df.minutes<16]
     elif time == 'up to 30 min':
@@ -86,11 +136,12 @@ def time_filter(time, df):
 
 
 
-
-
 if __name__ == "__main__":
 
     recipe_df = pd.read_csv("../Fed_up/data/preprocessed/recipe_pp.csv")
+    recipe_df = pd.read_csv(PATH_DATA+FILE_DATA)
+    
+    print('the shape of the cleaned dataframe is:')
     print(recipe_df.shape)
     # macronutriment_list = ['recipe_id', 'name', 'total_fat', 'protein', 'carbohydrates']
     # goals = ['maintain', 'lose', 'gain', 'build']
@@ -105,9 +156,31 @@ if __name__ == "__main__":
     #     print(f"Shape after filtering : {goals_filter(recipe_df, goal)[macronutriment_list].shape}")
     #     print(f"Showing {rows} first values of filtered DataFrame : ")
     #     display(goals_filter(recipe_df, goal)[macronutriment_list].head(rows))
-    allergies_input = ['milk','eggs','fish','shellfish', 'tree_nuts', 'peanuts', 'wheat', 'soybeans', 'mustard']
-    result = allergie_filter(allergies_input ,recipe_df)
-    sample = result.sample(1)
+
+    diet_result = diet_filter(recipe_df, 'vegan')
+    print('the shape of the dataframe given your life style is:')
+    print(diet_result.shape)
+
+    allergies_input = ['milk','fish', 'tree_nuts', 'peanuts', 'wheat', 'soybeans', 'mustard']
+    allergy_result = allergie_filter(diet_result, allergies_input)
+    print('the shape of the dataframe excluding the allergies is:')
+    print(allergy_result.shape)
+
+    dislikes_input = ['beet','eggs','cauliflower','blue cheese','mushrooms','shrimp','turnips']
+    dislikes_allergy_result = dislikes_filter(allergy_result, dislikes_input)
+    print('the shape of the dataframe excluding the allergies and the things you do not like is:')
+    print(dislikes_allergy_result.shape)
+
+    manual_dislikes_input = "eggplant, milk, cheese, orange"
+    all_dislikes_result = manual_dislikes_filter(dislikes_allergy_result, manual_dislikes_input)
+    print('the shape of the dataframe excluding ALL the allergies and ALL the things you do not like is:')
+    print(all_dislikes_result.shape)
+
+    time_result = time_filter(dislikes_allergy_result, 'up to 15 min')
+    print('the shape of the dataframe including the time restriction is:')
+    print(time_result.shape)
+
+    sample = time_result.sample(1)
 
     print(sample['name'])
     for ingredient in sample['ingredients']:
