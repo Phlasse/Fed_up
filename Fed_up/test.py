@@ -75,7 +75,7 @@ def run_test(predict=True, sample=None):
         predictions = list()
 
         for index, test in data.iterrows():
-            prediction_matrix = get_user_recommendations(user_inputs=eval(test['inputs']), clear_neg=False)
+            prediction_matrix = get_user_recommendations(user_inputs=eval(test['inputs']), clear_neg=False, forced_recipes=[test['target']])
             prediction_row = prediction_matrix[prediction_matrix.index == test['target']]
 
             if len(prediction_row) > 0:
@@ -176,16 +176,16 @@ def run_recommendations(user_id=None, collaborative=0.5, clear_neg=False):
 
 if __name__ == "__main__":
     # user_data = setup_test_data()
-    input_df, output_df = run_recommendations(user_id=235291)
+    # input_df, output_df = run_recommendations(user_id=235291)
 
-    # test_data, test_metrics = run_test(sample=2000)
+    test_data, test_metrics = run_test(sample=100)
 
-    # print("")
-    # print("********************")
-    # print('Rows:', test_data.shape[0])
-    # print('Cols:', test_data.shape[1])
-    # print("")
-    # print(test_data.info())
-    # print("")
-    # print("Test results:")
-    # print(test_metrics)
+    print("")
+    print("********************")
+    print('Rows:', test_data.shape[0])
+    print('Cols:', test_data.shape[1])
+    print("")
+    print(test_data.info())
+    print("")
+    print("Test results:")
+    print(test_metrics)

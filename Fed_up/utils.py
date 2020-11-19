@@ -5,7 +5,8 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 import nltk
 from nltk.stem import WordNetLemmatizer
-from recipe import get_data
+
+from Fed_up.recipe import get_data
 
 nltk.download('wordnet')
 nltk.download('stopwords')
