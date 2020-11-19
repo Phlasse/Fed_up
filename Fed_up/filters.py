@@ -1,10 +1,5 @@
-from Fed_up.recipe import clean_data, get_data, get_raw_data, select_universe
 import pandas as pd
 from IPython.display import display
-
-
-PATH_DATA ='../Fed_up/data/raw/'
-FILE_DATA = 'data-preprocessed-recipe_pp.csv'
 
 
 MILK_lIST = ['milk', 'cheese', 'cream', 'curd', 'butter', 'ghee', 'yogurt', 'casein']
@@ -143,7 +138,9 @@ def time_filter(df, time):
 
 if __name__ == "__main__":
 
+    recipe_df = pd.read_csv("../Fed_up/data/preprocessed/recipe_pp.csv")
     recipe_df = pd.read_csv(PATH_DATA+FILE_DATA)
+    
     print('the shape of the cleaned dataframe is:')
     print(recipe_df.shape)
     # macronutriment_list = ['recipe_id', 'name', 'total_fat', 'protein', 'carbohydrates']
