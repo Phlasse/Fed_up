@@ -102,15 +102,20 @@ def get_user_recommendations(user_likes = False, n_recommendations = 50):
      getting the recommendation based on each recipe and then summing the scores'''
 
     content_latents, rating_latents = get_prediction_data()
+    present_recipe_ids = []
 
-    test_user = {2923: 1, 1861: 1, 2175: 1, 3497: 0, 2680: 0}
+    for i in content_latents:
+        present_recipe_ids = present_recipe_ids + i.index.tolist()
+
+    test_user = {50022: 1, 78834: 1, 47474: 1, 230720: 1, 14111: 1, 87461: 1, 834: 1, 122591: 1, 110578: 1, 126689: 1, 74394: 1, 26626: 1, 36083: 1, 33130: 1, 110084: 1, 78952: 1, 11502: 1, 187153: 1, 100650: 1, 178212: 1, 166559: 1, 248219: 1, 83224: 0, 347989: 1, 30704: 1, 52035: 1, 30651: 1, 47881: 1, 212727: 1, 19710: 1, 9975: 1, 5046: 1, 125091: 1, 169307: 1, 89543: 1, 216851: 1, 109658: 1, 106708: 1, 125662: 1, 101651: 1, 27781: 1, 99554: 1, 88031: 1, 92333: 1, 13805: 1, 77989: 1, 63947: 1, 139671: 1, 261827: 1, 74532: 1, 63045: 1, 174189: 1, 116804: 1, 94735: 1, 103916: 1, 237535: 1, 79278: 1, 410406: 1, 152742: 1, 41463: 1, 38528: 1, 81347: 1, 33999: 1, 9845: 1, 61931: 1, 124574: 0, 90135: 1, 357226: 1, 132920: 1, 76540: 1, 80939: 1, 212480: 1, 121349: 1, 30470: 1, 74007: 1, 104799: 1, 272062: 1, 202769: 1, 77801: 1, 111960: 1, 62467: 1, 37318: 1, 255147: 0, 102872: 1, 76198: 1, 98639: 1, 99219: 1, 150987: 0, 10125: 1, 67345: 0, 60019: 1, 182629: 1, 72887: 1, 270713: 1, 35609: 1, 188725: 1, 316849: 1, 99019: 1, 24706: 1, 30565: 1, 182061: 0, 143045: 1, 476476: 1, 12427: 0, 14701: 1, 101916: 1, 129870: 0, 10465: 1, 62057: 1, 74008: 1, 118080: 1, 3014: 1, 15364: 1, 57473: 1, 77497: 1, 106361: 1, 29577: 1, 63499: 1, 102348: 1, 11177: 1, 28603: 1, 67212: 1, 105572: 1, 89703: 1, 94773: 1, 37056: 1, 98524: 1, 19417: 1, 41728: 1, 244121: 1, 66019: 1, 49189: 1, 40994: 1, 37377: 1, 432196: 1, 140136: 1, 190918: 1, 73754: 1, 117153: 1, 122289: 1, 124817: 1, 207611: 1, 175418: 1, 347938: 1, 100296: 1, 3741: 1, 130012: 1, 22049: 0, 25147: 1, 277435: 1, 121031: 1, 130875: 1, 42780: 1, 168408: 1, 82109: 1, 61380: 1, 81032: 1, 39572: 1, 104150: 1, 267476: 1, 281383: 1}
     user_likes = []
     user_dislikes = []
     for key, value in test_user.items():
-        if value == 1:
+        if value == 1 and key in present_recipe_ids:
             user_likes.append(key)
-        elif value == 0:
+        elif value == 0 and key in present_recipe_ids:
             user_dislikes.append(key)
+
 
     ### add positive recommendations ###
     recommendations = [get_one_recommendation(i, content_latents, rating_latents) for i in user_likes if i != []]
@@ -118,13 +123,14 @@ def get_user_recommendations(user_likes = False, n_recommendations = 50):
     dislikes = [get_one_recommendation(i, content_latents, rating_latents)*-1 for i in user_dislikes if i != []]
     #for i in user_dislikes:
     #concetenate the list to a big df
+    print(len(present_recipe_ids))
     recommendations_df=pd.concat(recommendations)
     dislike_df=pd.concat(dislikes)
     complete_recs = pd.concat([recommendations_df, dislike_df], axis=0)
     # sum the scores using groupby
 
     grouped_recommendations= complete_recs.groupby(by="recipe_id").sum().sort_values(by="hybrid", ascending=False)
-    return grouped_recommendations[grouped_recommendations.hybrid < 0.99]
+    return grouped_recommendations[~grouped_recommendations.index.isin(user_likes)]
     #return recipe_list
 
 def get_prediction_data():
