@@ -7,6 +7,7 @@ from sklearn.decomposition import TruncatedSVD, PCA, NMF
 from sklearn.metrics.pairwise import cosine_similarity
 
 from Fed_up import filters
+from Fed_up import storage
 
 
 TEST_USER = {505777: 1, 11126: 1, 506678: 1, 546: 1, 14111: 1, 87461: 1, 834: 0, 11976: 1, 536726: 0}
@@ -17,7 +18,7 @@ def __create_latent_matrices(pool = 2000, content_reduction = 250, rating_reduct
                              goal = '', diet = '', allergies = [], dislikes = [],
                              custom_dsl = '', time = None, steps = None,
                              vectorizer = 'count', dimred = 'svd',
-                             ngram = (1,1), min_df = 1, max_df = 1.0):
+                             ngram = (1,1), min_df = 1, max_df = 1.0, local = False):
 
     ''' Generates the latent dataframes used for the prediction model '''
 
@@ -26,9 +27,13 @@ def __create_latent_matrices(pool = 2000, content_reduction = 250, rating_reduct
         user_inputs = TEST_USER
     user_recipes = list(user_inputs.keys())
 
-    csv_path = os.path.join(os.path.dirname(__file__), "data/preprocessed")
-    recipes_df_raw = pd.read_csv(f"{csv_path}/recipe_pp.csv")
-    reviews_df_raw = pd.read_csv(f"{csv_path}/review_pp.csv")
+    if local:
+        csv_path = os.path.join(os.path.dirname(__file__), "data/preprocessed")
+        recipes_df_raw = pd.read_csv(f"{csv_path}/recipe_pp.csv")
+        reviews_df_raw = pd.read_csv(f"{csv_path}/review_pp.csv")
+    else:
+        recipes_df_raw = storage.import_file('data/preprocessed', 'recipe_pp.csv')
+        reviews_df_raw = storage.import_file('data/preprocessed', 'review_pp.csv')
 
     # For test purposes only
     if forced_recipes and user_id:
