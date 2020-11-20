@@ -10,15 +10,20 @@ import datetime
 
 from Fed_up.metrics import get_scoring_metrics
 from Fed_up.model import get_user_recommendations
+from Fed_up import storage
 
 
-def setup_test_data(min_reviews=2):
+def setup_test_data(min_reviews=2, local=False):
     """ Creating a dataframe per user with the inputs and target for testing """
 
     # Fetching the review dataframe
     print("Fetching the review dataframe...")
-    input_csv_path = os.path.join(os.path.dirname(__file__), "data/preprocessed")
-    data = pd.read_csv(f'{input_csv_path}/review_pp.csv')
+
+    if local:
+        input_csv_path = os.path.join(os.path.dirname(__file__), "data/preprocessed")
+        data = pd.read_csv(f'{input_csv_path}/review_pp.csv')
+    else:
+        data = storage.import_file('data/preprocessed', 'review_pp.csv')
 
     # Creating user / reviews dict
     print("Creating user and reviews dict...")
@@ -51,32 +56,42 @@ def setup_test_data(min_reviews=2):
     print("Saving test input dataframe...")
 
     # timestamp = '{:%Y%m%d_%H%M}'.format(datetime.datetime.now())
-    output_csv_path = os.path.join(os.path.dirname(__file__), "data/test")
-    test_df.to_csv(f'{output_csv_path}/test_inputs.csv', index=False)
+
+    if local:
+        output_csv_path = os.path.join(os.path.dirname(__file__), "data/test")
+        test_df.to_csv(f'{output_csv_path}/test_inputs.csv', index=False)
+    else:
+        storage.upload_file(test_df, 'data/test', 'test_inputs.csv')
 
     return test_df
 
 
-def run_test(predict=True, sample=None):
+def run_test(predict = True, sample = None, vectorizer = 'count', dimred = 'svd', ngram = (1,1), min_df = 1, max_df = 1.0, local = False):
     """ Running the test, by computing predictions and preparing the result dataframe """
     pd.options.mode.chained_assignment = None
 
     print("Fetching the test inputs...")
-    input_csv_path = os.path.join(os.path.dirname(__file__), "data/test")
-    input_data = pd.read_csv(f'{input_csv_path}/test_inputs.csv')
+
+    if local:
+        input_csv_path = os.path.join(os.path.dirname(__file__), "data/test")
+        input_data = pd.read_csv(f'{input_csv_path}/test_inputs.csv')
+    else:
+        input_data = storage.import_file('data/test', 'test_inputs.csv')
 
     print("Calculating predictions...")
 
     if sample is None:
         data = input_data.copy()
     else:
-        data = input_data.copy().sample(sample)
+        data = input_data.sample(sample, random_state=42)
 
     if predict:
         predictions = list()
 
         for index, test in data.iterrows():
-            prediction_matrix = get_user_recommendations(user_inputs=eval(test['inputs']), clear_neg=False, user_id=test['user_id'], forced_recipes=[test['target']])
+            prediction_matrix = get_user_recommendations(user_inputs=eval(test['inputs']), clear_neg=False, user_id=test['user_id'], forced_recipes=[test['target']],
+                                                         vectorizer = 'count', dimred = 'svd', ngram = (1,1), min_df = 1, max_df = 1.0)
+
             prediction_row = prediction_matrix[prediction_matrix.index == test['target']]
 
             if len(prediction_row) > 0:
@@ -123,8 +138,12 @@ def run_test(predict=True, sample=None):
     print("Saving results dataframe...")
 
     timestamp = '{:%Y%m%d_%H%M}'.format(datetime.datetime.now())
-    csv_path = os.path.join(os.path.dirname(__file__), "data/test")
-    data.to_csv(f'{csv_path}/test_outputs_{timestamp}.csv', index=False)
+
+    if local:
+        csv_path = os.path.join(os.path.dirname(__file__), "data/test")
+        data.to_csv(f'{csv_path}/test_outputs_{timestamp}.csv', index=False)
+    else:
+        storage.upload_file(data, 'data/test', f'test_outputs_{timestamp}.csv')
 
     print("Calculating metrics for tests...")
 
@@ -144,10 +163,16 @@ def __convert_to_rating(data):
     return new_rating
 
 
-def run_recommendations(user_id=None, collaborative=0.5, clear_neg=False):
-    csv_path = os.path.join(os.path.dirname(__file__), "data")
-    test_df = pd.read_csv(f'{csv_path}/test/test_inputs.csv')
-    recipe_df = pd.read_csv(f"{csv_path}/preprocessed/recipe_pp.csv")
+def run_recommendations(user_id=None, collaborative=0.5, clear_neg=False,
+                        vectorizer = 'count', dimred = 'svd', ngram = (1,1), min_df = 1, max_df = 1.0, local = False):
+
+    if local:
+        csv_path = os.path.join(os.path.dirname(__file__), "data")
+        test_df = pd.read_csv(f'{csv_path}/test/test_inputs.csv')
+        recipe_df = pd.read_csv(f"{csv_path}/preprocessed/recipe_pp.csv")
+    else:
+        test_df = storage.import_file('data/test', 'test_inputs.csv')
+        recipe_df = storage.import_file('data/preprocessed', 'recipe_pp.csv')
 
     if user_id:
         test_case = test_df[test_df.user_id == user_id]
@@ -165,7 +190,8 @@ def run_recommendations(user_id=None, collaborative=0.5, clear_neg=False):
 
     display(input_df)
 
-    recommendations = get_user_recommendations(user_inputs=inputs, collaborative=collaborative, clear_neg=clear_neg)
+    recommendations = get_user_recommendations(user_inputs = inputs, collaborative = collaborative, clear_neg = clear_neg,
+                                               vectorizer = 'count', dimred = 'svd', ngram = (1,1), min_df = 1, max_df = 1.0)
 
     output_df = recommendations.merge(recipe_df, on='recipe_id', how='left') \
                 [['recipe_id', 'name', 'content', 'collaborative', 'hybrid', 'rec_score']]
@@ -177,16 +203,16 @@ def run_recommendations(user_id=None, collaborative=0.5, clear_neg=False):
 
 if __name__ == "__main__":
     # user_data = setup_test_data()
-    # input_df, output_df = run_recommendations(user_id=235291)
+    input_df, output_df = run_recommendations(user_id=235291)
 
-    test_data, test_metrics = run_test(sample=1_000)
+    # test_data, test_metrics = run_test(sample=1_000)
 
-    print("")
-    print("********************")
-    print('Rows:', test_data.shape[0])
-    print('Cols:', test_data.shape[1])
-    print("")
-    print(test_data.info())
-    print("")
-    print("Test results:")
-    print(test_metrics)
+    # print("")
+    # print("********************")
+    # print('Rows:', test_data.shape[0])
+    # print('Cols:', test_data.shape[1])
+    # print("")
+    # print(test_data.info())
+    # print("")
+    # print("Test results:")
+    # print(test_metrics)
