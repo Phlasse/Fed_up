@@ -12,7 +12,9 @@ def rating_mae(data):
 
 def rating_le(data, dif_threshold=1):
     le = [1 if (data.loc[index, 'rating'] - data.loc[index, 'rec_rating']) > dif_threshold else 0 for index, row in data.iterrows()]
-    return np.round(sum(le) / len(le), 3)
+    if len(le) > 0:
+        return np.round(sum(le) / len(le), 3)
+    return 0.0
 
 
 def like_accuracy(data):

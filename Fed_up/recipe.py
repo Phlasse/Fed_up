@@ -9,7 +9,7 @@ import warnings
 import datetime
 
 from Fed_up import review
-from Fed_up import utils
+from Fed_up import cleaning
 
 
 NUTRITION_COLS = ['calories', 'total_fat', 'sugar', 'sodium',
@@ -134,7 +134,7 @@ def clean_data(df):
 
     # Creating and cleaning metadata column
     df['metadata'] = df['name'] + " " + df['tags_str'] + " " + df['ingredients_str'] # + " " + df['steps_str'] + " " + df['description_str']
-    df['metadata'] = utils.cleaning_strings(df['metadata'], remove_num=False)
+    df['metadata'] = cleaning.cleaning_strings(df['metadata'], remove_num=False)
 
     # Renaming contributor_id to user_id for coherence
     df.rename(columns = {'contributor_id': 'user_id', 'mean': 'rating_mean', 'count': 'rating_count'}, inplace = True)
