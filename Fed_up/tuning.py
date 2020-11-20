@@ -8,6 +8,7 @@ from IPython.display import display
 from Fed_up import test
 import time
 
+from Fed_up import storage
 
 # SET INFO
 VECTORIZORS = ['count', 'tfidf']
@@ -62,9 +63,14 @@ def run_tunning(sample=1_000):
                         outputs = outputs.append(new_row, ignore_index=True)
                         display(outputs)
 
+    if local:
+        csv_path = os.path.join(os.path.dirname(__file__), "data/test")
+        data.to_csv(f'{csv_path}/test_tuning_{timestamp}.csv', index=False)
+    else:
+        storage.upload_file(data, 'data/test', f'test_tuning__{timestamp}.csv')
+
     return outputs
 
 
 if __name__ == "__main__":
     df = run_tunning()
-    import ipdb; ipdb.set_trace()

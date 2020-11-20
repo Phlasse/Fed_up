@@ -203,9 +203,8 @@ def run_recommendations(user_id=None, collaborative=0.5, clear_neg=False,
 
 if __name__ == "__main__":
     # user_data = setup_test_data()
-    input_df, output_df = run_recommendations(user_id=235291)
-
-    # test_data, test_metrics = run_test(sample=1_000)
+    # input_df, output_df = run_recommendations(user_id=235291)
+    test_data, test_metrics = run_test(sample=1_000)
 
     # print("")
     # print("********************")
