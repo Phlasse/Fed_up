@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.decomposition import TruncatedSVD, PCA, NMF
 from sklearn.metrics.pairwise import cosine_similarity
+from scipy import sparse
 
 from Fed_up import filters
 from Fed_up import storage
@@ -16,25 +17,26 @@ from Fed_up import storage
 TEST_USER = {505777: 1, 11126: 1, 506678: 1, 546: 1, 14111: 1, 87461: 1, 834: 0, 11976: 1, 536726: 0}
 
 
-def create_latent_matrices(vectorizer = 'count', dimred = 'svd',
-                           ngram = (1,1), min_df = 1, max_df = 1.0):
+def create_latent_matrices(vectorizer = 'tfidf', dimred = 'svd',
+                           ngram = (1,1), min_df = 1, max_df = 1.0, local = False):
 
     ''' Generates the latent dataframes used for the prediction model '''
 
     print("\n***** Creating Latent Matrices *****")
     print("Loading preprocessed data for recipes and reviews...")
 
-    recipes_df = storage.import_file('data/preprocessed', 'recipe_pp.csv')
-    reviews_df = storage.import_file('data/preprocessed', 'review_pp.csv')
+    if local:
+        csv_path = os.path.join(os.path.dirname(__file__), "data/preprocessed")
+        recipes_df = pd.read_csv(f"{csv_path}/recipe_pp.csv")
+        reviews_df = pd.read_csv(f"{csv_path}/review_pp.csv")
 
-    # Local loading:
-    # csv_path = os.path.join(os.path.dirname(__file__), "data/preprocessed")
-    # recipes_df = pd.read_csv(f"{csv_path}/recipe_pp.csv")
-    # reviews_df = pd.read_csv(f"{csv_path}/review_pp.csv")
+    else:
+        recipes_df = storage.import_file('data/preprocessed', 'recipe_pp.csv')
+        reviews_df = storage.import_file('data/preprocessed', 'review_pp.csv')
 
     # Test purposes:
-    # recipes_df = recipes_df.sample(100)
-    # reviews_df = reviews_df[reviews_df['recipe_id'].isin(recipes_df['recipe_id'])]
+    recipes_df = recipes_df.sample(100)
+    reviews_df = reviews_df[reviews_df['recipe_id'].isin(recipes_df['recipe_id'])]
 
     print(f"Vectorizing metadata using {vectorizer.upper()} approach...")
     print(f"> Applying ngram {ngram}, min_df {min_df} and max_df {max_df}")
@@ -74,21 +76,29 @@ def create_latent_matrices(vectorizer = 'count', dimred = 'svd',
 
     print("Pivoting ratings to user/recipe matrix...")
 
-    ratings_basis = pd.merge(recipes_df[['recipe_id']], reviews_df, on="recipe_id", how="right")
-    ratings = ratings_basis.pivot(index = 'recipe_id', columns ='user_id', values = 'rating').fillna(0)
+    ratings_basis = pd.merge(recipes_df[['recipe_id']], reviews_df, on="recipe_id", how="right").sort_values(by="recipe_id")
+
+    chunk_size = 10
+    chunks = [x for x in range(0, ratings_basis.shape[0], chunk_size)]
+    ratings_pivot = pd.concat([ratings_basis.iloc[c:(c + chunk_size)]
+                    .pivot(index = 'recipe_id', columns ='user_id', values = 'rating') for c in chunks])
+    ratings = ratings_pivot.fillna(0).groupby('recipe_id').sum()
+
+    # Bulk approach
+    # ratings = ratings_basis.pivot(index = 'recipe_id', columns ='user_id', values = 'rating').fillna(0)
 
     print(f"Reducing rating vector dimensions using the {dimred.upper()} approach...")
 
     if dimred == 'svd':
         r_base_case = TruncatedSVD(n_components = min(ratings.shape[1] - 1, 1000))
-        r_base_case.fit_transform(vector_df)
+        r_base_case.fit_transform(ratings)
         r_cumsum = r_base_case.explained_variance_ratio_.cumsum()
         rating_reduction = len(r_cumsum[r_cumsum <= 0.8])
         r_redutor = TruncatedSVD(n_components = rating_reduction)
 
     elif dimred == 'nmf':
         r_base_case = NMF(n_components = min(ratings.shape[1] - 1, 1000))
-        r_base_case.fit_transform(vector_df)
+        r_base_case.fit_transform(ratings)
         r_cumsum = r_base_case.explained_variance_ratio_.cumsum()
         rating_reduction = len(r_cumsum[r_cumsum <= 0.8])
         r_redutor = NMF(n_components = rating_reduction)
