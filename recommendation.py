@@ -26,55 +26,48 @@ def recommendation(data):
     steps = st.sidebar.slider("Define complexity? (steps)", 1, 20, 7)
 
     filtered_df = data[data.minutes<time]
-    filtered_df = filtered_df[filtered_df.n_steps<steps]
+    filtered_df = filtered_df[filtered_df.n_steps<steps-1]
 
-    #selected_recipes = {}
-    #check_box = {}
-    #for i in range(20):
-    ##    st.subheader(filtered_df[i:i+1].name)
-  #      pic, ing, dec, check=st.beta_columns(4)
-     #   with pic:
-      #      response_pic = requests.get("https://cdn.pixabay.com/photo/2017/06/01/18/46/cook-2364221_1280.jpg")
-       #     img = Image.open(BytesIO(response_pic.content))
-        #    st.image(img, width=150)
-   #     with ing:
-    #        st.text(filtered_df[i:i+1].ingredients)
-     #   with dec:
-     #       st.text("hi")#filtered_df.ingredients[i])
-      #  with check:
-       #     check_box[i] = st.checkbox('select')
-        #    if check_box[i]:
-         #       selected_recipes[i] = filtered_df[i:i+1].recipe_id
+
+### List of recipe recommendations on main window here ###
+    recipes_picked = {}
+    headers = [i for i in filtered_df["name"]]
+    ingredients = [i.split(",") for i in filtered_df["ingredients"]]
+    steps_todo = [i.split(",") for i in filtered_df["steps"]]
+
+    for i in range(5):
+        st.header(headers[i].upper())
+        pic, ing, steps=st.beta_columns(3)
+        with pic:
+            st.subheader('')
+            response_pic = requests.get("https://cdn.pixabay.com/photo/2017/06/01/18/46/cook-2364221_1280.jpg")
+            img = Image.open(BytesIO(response_pic.content))
+            st.image(img, width=200)
+            check_box = st.checkbox(f'Add no. {i}')
+            if check_box:
+                recipes_picked[f'{i}'] = 1
+            else:
+                recipes_picked[f'{i}'] = 0
+        with ing:
+            st.subheader('Ingredient:')
+
+            #st.text(filtered_df[i:i+1].ingredients)
+            for j in ingredients[i]:
+                st.text(j.replace("[", "").replace("]", "").replace("'", ""))
+        with steps:
+            st.subheader('Directions::')
+            #st.write(steps_todo[i])
+            for index, step in enumerate(steps_todo[i]):
+                st.write(f'{index+1}: {step.replace("[", "").replace("]", "")}')
+
+    st.sidebar.subheader("Your selection:")
+    for i in range(len(recipes_picked)):
+        if recipes_picked[f'{i}'] ==1:
+            st.sidebar.write(headers[i])
 
 
     #data = data[["name", "recipe_id", "minutes", ]]
     st.write(filtered_df.head(5))
-    response = requests.get("https://cdn.pixabay.com/photo/2017/06/01/18/46/cook-2364221_1280.jpg")
-    img = Image.open(BytesIO(response.content))
-    #img = Image.open(StringIO(response.content))
-    st.image(img, width=500)
-
-
-    login, signin = st.sidebar.beta_columns(2)
-    with login:
-        member = st.button("Log in")
-
-    with signin:
-        new_user = st.button("New User")
-
-    if new_user:
-        username = st.sidebar.text_input("Username : ", "")
-        st.sidebar.text("Select your allergies :")
-        for allergy in ALLERGIES:
-            st.sidebar.checkbox(allergy, value=False, key=allergy)
-
-    if member:
-        ### Manage stuff for existing users ###
-        st.sidebar.selectbox("Select your username : ", ["Jessica", "Nuno", "Olivier", "Phillip"])
-
-
-
-
 
 
     return
