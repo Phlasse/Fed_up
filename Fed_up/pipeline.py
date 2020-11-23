@@ -35,8 +35,8 @@ def create_latent_matrices(vectorizer = 'tfidf', dimred = 'svd',
         reviews_df = storage.import_file('data/preprocessed', 'review_pp.csv')
 
     # Test purposes:
-    recipes_df = recipes_df.sample(100)
-    reviews_df = reviews_df[reviews_df['recipe_id'].isin(recipes_df['recipe_id'])]
+    # recipes_df = recipes_df.sample(100)
+    # reviews_df = reviews_df[reviews_df['recipe_id'].isin(recipes_df['recipe_id'])]
 
     print(f"Vectorizing metadata using {vectorizer.upper()} approach...")
     print(f"> Applying ngram {ngram}, min_df {min_df} and max_df {max_df}")
