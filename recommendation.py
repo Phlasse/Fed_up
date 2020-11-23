@@ -11,78 +11,107 @@ import Fed_up.filters
 
 @st.cache
 def load_result():
-    data = pd.read_csv("Fed_up/data/samples/recipe_sample_20201118_1137.csv")
+    data = pd.read_csv("Fed_up/data/samples/my_sample.csv")
     return data
 
 
 def recommendation(data):
 
-    #set_background()
+    ### color = st.color_picker('Pick A Color', '#95D6A4')
+    img_fed_up = Image.open("Fed_up/data/samples/logo.png")
+    img_fed_up_sidebar = Image.open("Fed_up/data/samples/sidebar_logo.png")
+    st.image(img_fed_up, width=200)
+    st.sidebar.image(img_fed_up_sidebar, width=200)
+
     st.sidebar.markdown("# Here are your results!")
     st.sidebar.markdown("#### Feel free to adjust your search.")
     st.sidebar.markdown("    ")
 
-    time = st.sidebar.slider("How patient are you today? (Minutes)", 15, 120, 30)
-    steps = st.sidebar.slider("Define complexity? (steps)", 1, 20, 7)
+    time = st.sidebar.slider("How patient are you today? (Minutes)", 15, 120, 60)
+    steps = st.sidebar.slider("Define complexity? (steps)", 3, 20, 7)
+    number_recipes = st.sidebar.slider("Number of recipes to show", 5, 20, 5)
+
+
 
     filtered_df = data[data.minutes<time]
+    filtered_df = filtered_df[filtered_df.minutes>10]
     filtered_df = filtered_df[filtered_df.n_steps<steps-1]
 
 
 ### List of recipe recommendations on main window here ###
     recipes_picked = {}
     headers = [i for i in filtered_df["name"]]
-    ingredients = [i.split(",") for i in filtered_df["ingredients"]]
-    steps_todo = [i.split(",") for i in filtered_df["steps"]]
+    ingredients = [i.split("',") for i in filtered_df["ingredients"]]
+    steps_todo = [i.split("',") for i in filtered_df["steps"]]
+    urls = [i for i in filtered_df["image_url"]]
+    rating_avg = [i for i in filtered_df["rating_mean"]]
+    rating_qty = [i for i in filtered_df["rating_count"]]
+    minutes_list = [i for i in filtered_df["minutes"]]
+    calories = [int(i) for i in filtered_df["calories"]]
+    total_fat = [i for i in filtered_df["total_fat"]]
+    saturated_fat = [i for i in filtered_df["saturated_fat"]]
+    sugar = [i for i in filtered_df["sugar"]]
+    sodium = [i for i in filtered_df["sodium"]]
+    protein = [i for i in filtered_df["protein"]]
+    carbs = [i for i in filtered_df["carbohydrates"]]
 
-    for i in range(5):
-        st.header(headers[i].upper())
+
+    for i in range(number_recipes):
+        st.header(headers[i].replace(" s ", "'s ").upper())
+        response_pic = requests.get(urls[i])#"https://cdn.pixabay.com/photo/2017/06/01/18/46/cook-2364221_1280.jpg")
+        img = Image.open(BytesIO(response_pic.content))
+        st.image(img, width=700)
+
+        check, minutes, rating=st.beta_columns(3)
+        with check:
+            check_box = st.checkbox(f'Add no. {i+1}')
+            if check_box:
+                recipes_picked[f'{i+1}'] = 1
+            else:
+                recipes_picked[f'{i+1}'] = 0
+        with minutes:
+            st.write(f'{int(minutes_list[i])} to prepare')
+        with rating:
+            st.write(f'{round(float(rating_avg[i]),2)} Stars on {int(rating_qty[i])} reviews.')
         pic, ing, steps=st.beta_columns(3)
         with pic:
-            st.subheader('')
-            response_pic = requests.get("https://cdn.pixabay.com/photo/2017/06/01/18/46/cook-2364221_1280.jpg")
-            img = Image.open(BytesIO(response_pic.content))
-            st.image(img, width=200)
-            check_box = st.checkbox(f'Add no. {i}')
-            if check_box:
-                recipes_picked[f'{i}'] = 1
-            else:
-                recipes_picked[f'{i}'] = 0
+
+            st.subheader("Stats:")
+            st.write(f'Calories: {calories[i]} Cal')
+            st.write(f'Total fat: {total_fat[i]} %*')
+            st.write(f'Saturated fat: {saturated_fat[i]} %*')
+            st.write(f'Sugar: {sugar[i]} %*')
+            st.write(f'Sodium: {sodium[i]} %*')
+            st.write(f'Protein: {protein[i]} %*')
+            st.write(f'Carbohydrates: {carbs[i]} %*')
+
         with ing:
             st.subheader('Ingredient:')
 
             #st.text(filtered_df[i:i+1].ingredients)
             for j in ingredients[i]:
-                st.text(j.replace("[", "").replace("]", "").replace("'", ""))
+                ji = j.replace("[", "").replace("]", "").replace("'", "")
+                st.write(ji.capitalize())
         with steps:
             st.subheader('Directions::')
             #st.write(steps_todo[i])
             for index, step in enumerate(steps_todo[i]):
-                st.write(f'{index+1}: {step.replace("[", "").replace("]", "")}')
+                step = step.replace("[", "").replace("]", "").replace("'","")
+                st.write(f'{index+1}: {step.capitalize()}')
 
     st.sidebar.subheader("Your selection:")
     for i in range(len(recipes_picked)):
-        if recipes_picked[f'{i}'] ==1:
+        if recipes_picked[f'{i+1}'] ==1:
             st.sidebar.write(headers[i])
 
+    st.write("\* refers to the average person with a calorie intake of 2000 calories per day.")
 
-    #data = data[["name", "recipe_id", "minutes", ]]
-    st.write(filtered_df.head(5))
 
+    #### DF can be printed with comment line below ####
+    ###'''st.write(filtered_df.head(5))'''
 
     return
 
-def set_background():
-    page_bg_img = '''
-    <style>
-    body {
-        background-image: url("https://cdn.pixabay.com/photo/2017/06/01/18/46/cook-2364221_1280.jpg");
-        background-size: cover;
-    }
-    </style>
-    '''
-    st.markdown(page_bg_img, unsafe_allow_html=True)
-    return
 
 if __name__=="__main__":
     #set_background()
