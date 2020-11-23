@@ -3,6 +3,7 @@
 import streamlit as st
 import welcome
 import recommendations
+import foodinder
 
 
 class MultiApp:
@@ -38,5 +39,6 @@ if __name__ == "__main__":
 
     app = MultiApp()
     app.add_app("Main", welcome.main)
+    app.add_app("Foodinder", foodinder.main)
     app.add_app("Recommendations", recommendations.main)
     app.run()
