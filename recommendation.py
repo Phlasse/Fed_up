@@ -5,8 +5,13 @@ from PIL import Image
 from io import BytesIO
 import requests
 import Fed_up.filters
+from fpdf import fpdf
+import os
+from datetime import datetime, timedelta
 #from StringIO import StringIO
 
+WIDTH= 215.9
+HEIGHT = 279.4
 
 
 @st.cache
@@ -60,17 +65,17 @@ def recommendation(data):
         st.header(headers[i].replace(" s ", "'s ").upper())
         response_pic = requests.get(urls[i])#"https://cdn.pixabay.com/photo/2017/06/01/18/46/cook-2364221_1280.jpg")
         img = Image.open(BytesIO(response_pic.content))
-        st.image(img, width=700)
+        st.image(img, width=697)
 
         check, minutes, rating=st.beta_columns(3)
         with check:
-            check_box = st.checkbox(f'Add no. {i+1}')
+            check_box = st.checkbox(f'Add no. {i+1} to selection')
             if check_box:
                 recipes_picked[f'{i+1}'] = 1
             else:
                 recipes_picked[f'{i+1}'] = 0
         with minutes:
-            st.write(f'{int(minutes_list[i])} to prepare')
+            st.write(f'{int(minutes_list[i])} minutes to prepare')
         with rating:
             st.write(f'{round(float(rating_avg[i]),2)} Stars on {int(rating_qty[i])} reviews.')
         pic, ing, steps=st.beta_columns(3)
@@ -99,12 +104,17 @@ def recommendation(data):
                 step = step.replace("[", "").replace("]", "").replace("'","")
                 st.write(f'{index+1}: {step.capitalize()}')
 
+    if st.sidebar.button('Print PDF'):
+        export_to_pdf(1, filtered_df)
+        st.write("PDF has been exported)")
+
     st.sidebar.subheader("Your selection:")
     for i in range(len(recipes_picked)):
         if recipes_picked[f'{i+1}'] ==1:
-            st.sidebar.write(headers[i])
+            st.sidebar.write(headers[i].replace(" s ", "'s ").capitalize())
 
     st.write("\* refers to the average person with a calorie intake of 2000 calories per day.")
+
 
 
     #### DF can be printed with comment line below ####
@@ -112,6 +122,11 @@ def recommendation(data):
 
     return
 
+def export_to_pdf(Selection, df):
+    pdf = FPDF()
+    pdf.output("what")
+
+    return
 
 if __name__=="__main__":
     #set_background()
