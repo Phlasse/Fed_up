@@ -14,6 +14,10 @@ CSS = """
 
 st.write(f'<style>{CSS}</style>', unsafe_allow_html=True)
 
+# img_fed_up = Image.open("Fed_up/data/samples/logo.png")
+# img_fed_up_sidebar = Image.open("Fed_up/data/samples/sidebar_logo.png")
+# st.sidebar.image(img_fed_up_sidebar, width=200)
+
 
 class MultiApp:
 
@@ -29,7 +33,7 @@ class MultiApp:
     def run(self):
 
         app = st.sidebar.radio(
-            'Go To',
+            ' ',
             self.apps,
             format_func=lambda app: app['title'])
 

@@ -14,7 +14,6 @@ import streamlit.components.v1 as components
 WIDTH= 215.9
 HEIGHT = 279.4
 
-
 @st.cache
 def load_result():
     data = pd.read_csv("Fed_up/data/samples/my_sample.csv")

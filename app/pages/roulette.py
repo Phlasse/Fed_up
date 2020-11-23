@@ -13,6 +13,7 @@ import time
 import os
 
 from Fed_up import filters
+from cards import draw_recipe
 
 
 @st.cache
@@ -22,11 +23,10 @@ def load_result():
     prefs_csv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/user_prefs.csv")) # TO DO: DEFINE PROPER PATH
 
     data = pd.read_csv(recipe_csv_path)
-    tinder_data = data[data['rating_count'] > 3].sort_values(by='rating_mean', ascending=False)
 
+    tinder_data = data[data['rating_count'] > 3].sort_values(by='rating_mean', ascending=False)
     user_prefs = pd.read_csv(prefs_csv_path)
     user = user_prefs[user_prefs.app_user_id == user_id]
-
     user_data = filters.all_filters(tinder_data, goal = user['goal'].values[0],
                                                  diet = user['diet'].values[0],
                                                  allergies = user['allergies'].values[0].split(", "),
@@ -52,44 +52,16 @@ def get_recipe(data, user):
     return user_id, user_fname, user_recipes, roulette_data
 
 
-def save_like(user_recipes, user_id, rid, liked):
-    user_recipes = user_recipes.append({'app_user_id': user_id, 'recipe_id': rid, 'liked': liked}, ignore_index=True)
-    csv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/user_likes.csv")) # TO DO: DEFINE PROPER PATH
-    user_recipes.to_csv(csv_path, index=False)
-
-
 def run():
     # Load info
     data, user = load_result()
     user_id, user_fname, user_recipes, roulette_data = get_recipe(data, user)
-    title = roulette_data.iloc[0]['name'].replace(" s ", "'s ").upper()
-    rid = roulette_data.iloc[0]['recipe_id']
+    recipe = roulette_data.iloc[0]
 
     # Display headers
     st.write("# Food Roulette")
     st.write(f"♥️ Tell us what you like, {user_fname}!")
     st.markdown("---")
 
-    recipe_show, recipe_liker = st.beta_columns([5, 1])
-
-    with recipe_show: # Display next item
-        st.write(f"### **{title}**")
-        st.write(" ")
-
-    with recipe_liker: # Manage option
-        st.write(" ")
-
-        if st.button('👍 Like'):
-            save_like(user_recipes, user_id, rid, 1)
-            st.experimental_rerun()
-
-        if st.button('👎 Dislike'):
-            save_like(user_recipes, user_id, rid, 0)
-            st.experimental_rerun()
-
-        st.markdown("---")
-
-        st.write(f"###### {len(user_recipes[(user_recipes['liked'] == 1) & (user_recipes['app_user_id'] == user_id)])} Liked")
-        st.write(f"###### {len(user_recipes[(user_recipes['liked'] == 0) & (user_recipes['app_user_id'] == user_id)])} Disliked")
-
+    draw_recipe(recipe, 'roulette', user_id, user_recipes)
 
