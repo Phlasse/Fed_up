@@ -35,18 +35,13 @@ def recommendation(data):
 
     time = st.sidebar.slider("How patient are you today? (Minutes)", 15, 120, 60)
     steps = st.sidebar.slider("Define complexity? (steps)", 3, 20, 7)
-    n_ingreds = st.sidebar.slider("How many different ingredients do you want?", 3, 25, 13)
-    persons = st.sidebar.slider("For how many are you cooking?", 1, 20, 2)
-
-    number_recipes = st.sidebar.slider("Number of recipes to show", 5, 40, 5)
+    number_recipes = st.sidebar.slider("Number of recipes to show", 5, 20, 5)
 
 
 
     filtered_df = data[data.minutes<time]
     filtered_df = filtered_df[filtered_df.minutes>10]
-    filtered_df = filtered_df[filtered_df.n_steps<steps]
-    filtered_df = filtered_df[filtered_df.n_ingredients<n_ingreds]
-
+    filtered_df = filtered_df[filtered_df.n_steps<steps-1]
 
 
 ### List of recipe recommendations on main window here ###
@@ -65,7 +60,6 @@ def recommendation(data):
     sodium = [i for i in filtered_df["sodium"]]
     protein = [i for i in filtered_df["protein"]]
     carbs = [i for i in filtered_df["carbohydrates"]]
-    summed_ingredients = {}
 
 
     for i in range(number_recipes):
@@ -100,43 +94,30 @@ def recommendation(data):
         with ing:
             st.subheader('Ingredient:')
 
+            #st.text(filtered_df[i:i+1].ingredients)
             for j in ingredients[i]:
                 ji = j.replace("[", "").replace("]", "").replace("'", "")
                 st.write(ji.capitalize())
-                if recipes_picked[f'{i+1}'] == 1:
-                    if ji in summed_ingredients:
-                        summed_ingredients[ji] += 1*persons
-                    else:
-                        summed_ingredients[ji] = 1*persons
-
         with steps:
             st.subheader('Directions::')
+            #st.write(steps_todo[i])
             for index, step in enumerate(steps_todo[i]):
                 step = step.replace("[", "").replace("]", "").replace("'","")
                 st.write(f'{index+1}: {step.capitalize()}')
+        ###components.html(
+        ###    '''<p style="page-break-before: always"> ''')
 
     st.sidebar.subheader("Your selection:")
     for i in range(len(recipes_picked)):
         if recipes_picked[f'{i+1}'] ==1:
             st.sidebar.write(headers[i].replace(" s ", "'s ").capitalize())
-    st.sidebar.subheader("Complete ingredient List:")
-    for key, value in summed_ingredients.items():
-        st.sidebar.write(value, " x ", key)
-
 
     st.write("\* refers to the average person with a calorie intake of 2000 calories per day.")
 
-    ing_list_exp = pd.DataFrame()
-    ing_list_exp["quantity"] = list(summed_ingredients.values())
-    ing_list_exp["Ingredient"] = list(summed_ingredients.keys())
 
-    txt = ing_list_exp.to_csv(index = False)
-    b64 = base64.b64encode(txt.encode()).decode()
-    href = f'<a href="data:file/ingredients.txt;base64,{b64}">Download Ingredient List</a> (right-click and save as &lt;some_name&gt;.txt)'
-    st.sidebar.markdown(href, unsafe_allow_html=True)
 
     #### DF can be printed with comment line below ####
-    #st.write(filtered_df.head(5))
+    ###'''st.write(filtered_df.head(5))'''
 
     return
 
