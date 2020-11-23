@@ -34,7 +34,7 @@ def main():
 
     # Load Data DataFrame here :
     # recipe_df, review_df, users_df = load_dataframe()
-    set_png_as_page_bg()
+    # set_png_as_page_bg()
 
     st.sidebar.markdown("## Hey ! Welcome to Fed Up :)")
     login, signin = st.sidebar.beta_columns(2)
