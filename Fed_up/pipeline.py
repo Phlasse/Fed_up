@@ -75,17 +75,10 @@ def create_latent_matrices(vectorizer = 'tfidf', dimred = 'svd',
     content_latent = pd.DataFrame(m_latent_matrix[:,0:content_reduction], index=recipes_df.recipe_id.tolist())
 
     print("Pivoting ratings to user/recipe matrix...")
-
-    ratings_basis = pd.merge(recipes_df[['recipe_id']], reviews_df, on="recipe_id", how="right").sort_values(by="recipe_id")
-
-    chunk_size = 10
-    chunks = [x for x in range(0, ratings_basis.shape[0], chunk_size)]
-    ratings_pivot = pd.concat([ratings_basis.iloc[c:(c + chunk_size)]
-                    .pivot(index = 'recipe_id', columns ='user_id', values = 'rating') for c in chunks])
-    ratings = ratings_pivot.fillna(0).groupby('recipe_id').sum()
-
-    # Bulk approach
-    # ratings = ratings_basis.pivot(index = 'recipe_id', columns ='user_id', values = 'rating').fillna(0)
+    ratings_basis = reviews_df.sort_values(by="recipe_id")
+    ratings = (ratings_basis.groupby(['recipe_id','user_id'])
+                           .rating.first()
+                           .unstack()).fillna(0)
 
     print(f"Reducing rating vector dimensions using the {dimred.upper()} approach...")
 
@@ -148,8 +141,7 @@ def get_recommendation(recipe_id, latent_1, latent_2, collaborative=0.5):
 
 def get_user_recommendations(user_inputs = None, n_recommendations = None,
                              collaborative = 0.5, clear_neg = False,
-                             vectorizer = 'count', dimred = 'svd',
-                             ngram = (1,1), min_df = 1, max_df = 1.0):
+                             content_latent = None, rating_latent = None):
 
     ''' Gets the recommendations for one user by taking all of its liked and disliked dishes,
         getting the recommendation based on each recipe and then summing the scores '''
@@ -161,8 +153,11 @@ def get_user_recommendations(user_inputs = None, n_recommendations = None,
 
     print("Loading latent matrixes from CSV...")
 
-    content_latent  = storage.import_file('data/models', 'content_latent.csv').rename(columns={'Unnamed: 0': 'recipe_id'}).set_index("recipe_id")
-    rating_latent = storage.import_file('data/models', 'rating_latent.csv').rename(columns={'Unnamed: 0': 'recipe_id'}).set_index("recipe_id")
+    if content_latent is None:
+        content_latent  = storage.import_file('data/models', 'content_latent.csv').rename(columns={'Unnamed: 0': 'recipe_id'}).set_index("recipe_id")
+
+    if rating_latent is None:
+        rating_latent = storage.import_file('data/models', 'rating_latent.csv').rename(columns={'Unnamed: 0': 'recipe_id'}).set_index("recipe_id")
 
     print("Listing likes/dislikes and running individual recommendations...")
 
@@ -211,5 +206,4 @@ def get_user_recommendations(user_inputs = None, n_recommendations = None,
 
 
 if __name__ == "__main__":
-
     create_latent_matrices()

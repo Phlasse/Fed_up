@@ -12,12 +12,28 @@ import ipdb
 import time
 import os
 
+from Fed_up.pipeline import get_user_recommendations
+from Fed_up import filters
 from cards import draw_recipe
+from helpers import side_filters
 
 
-# @st.cache
-def generate_recs(app, collab):
-    return app.recipes
+def generate_recs(app):
+    user_inputs = {row['recipe_id']: row['liked'] for index, row in app.user_rates.iterrows()}
+
+    recs = get_user_recommendations(user_inputs = user_inputs, collaborative = float(app.user_prefs.collab),
+                                    content_latent = app.content_matrix, rating_latent = app.rating_matrix)
+
+    rec_recipes = recs.merge(app.recipes, on="recipe_id", how="left")
+
+    user_info = app.user_prefs
+    filtered_recs = filters.all_filters(rec_recipes, goal = user_info['goal'].values[0],
+                                                     diet = user_info['diet'].values[0],
+                                                     allergies = user_info['allergies'].values[0].split(", "),
+                                                     dislikes = user_info['dislikes'].values[0].split(", "),
+                                                     custom_dsl = user_info['custom_dsl'].values[0])
+
+    return filtered_recs
 
 
 def run(app):
@@ -30,16 +46,16 @@ def run(app):
     st.sidebar.markdown("#### Feel free to adjust your search:")
     st.sidebar.markdown("    ")
 
-    time = st.sidebar.slider("How long are you willing to wait?", 15, 120, 60)
-    steps = st.sidebar.slider("How many steps are you willing to execute?", 3, 20, 7)
-    n_ingreds = st.sidebar.slider("How many ingredients are you willing to use?", 3, 25, 13)
-    n_recipes = st.sidebar.slider("How many recommendations do you want to see?", 5, 40, 5)
-    collab = st.sidebar.slider("How much would you like to try new flavors?", 0, 100, 50)
+    time, steps, ingreds, n_recipes = side_filters(app)
 
-    data = generate_recs(app, collab)
+    data = generate_recs(app)
     disliked_recipe_ids = app.user_dislikes.recipe_id.values
-    filtered_data = data[(~data.recipe_id.isin(disliked_recipe_ids)) & (data.minutes<=time) & (data.n_steps<=steps) & (data.n_ingredients<=n_ingreds)]
+    filtered_data = data[(~data.recipe_id.isin(disliked_recipe_ids)) & (data.minutes<=time) & (data.n_steps<=steps) & (data.n_ingredients<=ingreds)]
 
-    for index, recipe in filtered_data.head(n_recipes).iterrows():
-        draw_recipe(app, recipe, 'recommendation')
-        st.markdown("---")
+    if len(filtered_data.head(n_recipes)) > 0:
+        for index, recipe in filtered_data.head(n_recipes).iterrows():
+            draw_recipe(app, recipe, 'recommendation')
+            st.markdown("---")
+
+    else:
+        st.markdown("###### *No additional recommendations to show, try adjusting your filters!*")
