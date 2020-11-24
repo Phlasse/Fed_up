@@ -13,8 +13,8 @@ import time
 import os
 
 
-def run():
+def run(app):
     # Display headers
     st.write("# Checkout")
-    st.write(f"🥘 Manage and export your selected dishes.")
+    st.write(f"🛒 Confirm and export your selected dishes.")
     st.markdown("---")

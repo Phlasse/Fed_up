@@ -13,14 +13,32 @@ import time
 import os
 
 
-def save_like(user_recipes, user_id, rid, liked):
-    user_recipes = user_recipes.append({'app_user_id': user_id, 'recipe_id': rid, 'liked': liked}, ignore_index=True)
-    csv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/user_likes.csv")) # TO DO: DEFINE PROPER PATH
-    user_recipes.to_csv(csv_path, index=False)
+def save_like(app, rid, liked):
+
+    info = app.likes[(app.likes.app_user_id == app.user_id) & (app.likes.recipe_id == rid)]
+
+    if len(info) == 1:
+        index = info.index[0]
+        app.likes.loc[index, 'liked'] = liked
+        app.likes.loc[index, 'timestamp'] = pd.Timestamp.now()
+    else:
+        app.likes = app.likes.append({'app_user_id': app.user_id, 'recipe_id': rid, 'liked': liked, 'timestamp': pd.Timestamp.now()}, ignore_index=True)
+
+    app.likes.to_csv(app.likes_path, index=False)
 
 
-def draw_recipe(recipe, scope, user_id=None, user_recipes=None):
-    recipe_show_1, space, recipe_liker = st.beta_columns([4, 0.2, 1])
+def clear_like(app, rid):
+
+    info = app.likes[(app.likes.app_user_id == app.user_id) & (app.likes.recipe_id == rid)]
+
+    if len(info) == 1:
+        index = info.index[0]
+        app.likes.drop(app.likes.index[index], inplace=True)
+        app.likes.to_csv(app.likes_path, index=False)
+
+
+def draw_recipe(app, recipe, scope):
+    recipe_show_1, space, recipe_liker = st.beta_columns([4, 0.5, 1])
 
     with recipe_show_1: # Display next item
         title = recipe['name'].replace(" s ", "'s ").upper()
@@ -39,27 +57,43 @@ def draw_recipe(recipe, scope, user_id=None, user_recipes=None):
             st.write(" ")
 
             if st.button('👍 Like'):
-                save_like(user_recipes, user_id, recipe.recipe_id, 1)
+                save_like(app, recipe.recipe_id, 1)
                 st.experimental_rerun()
 
             if st.button('👎 Dislike'):
-                save_like(user_recipes, user_id, recipe.recipe_id, 0)
+                save_like(app, recipe.recipe_id, 0)
                 st.experimental_rerun()
 
             st.markdown("---")
 
-            st.write(f"###### {len(user_recipes[(user_recipes['liked'] == 1) & (user_recipes['app_user_id'] == user_id)])} Liked")
-            st.write(f"###### {len(user_recipes[(user_recipes['liked'] == 0) & (user_recipes['app_user_id'] == user_id)])} Disliked")
+            st.write(f"###### {len(app.likes[(app.likes['liked'] == 1) & (app.likes['app_user_id'] == app.user_id)])} Liked")
+            st.write(f"###### {len(app.likes[(app.likes['liked'] == 0) & (app.likes['app_user_id'] == app.user_id)])} Disliked")
 
-        elif scope == 'recommendation':
+        elif scope == 'recommendation' or scope == 'liked':
 
             st.write(" ")
 
-            # st.button('Temp')
+            if st.checkbox('Checkout', False, f'dislike-{recipe.recipe_id}'):
+                pass
+
+            liked_recipes = app.likes[(app.likes.app_user_id == app.user_id) & (app.likes.liked == 1)]
+
+            if recipe.recipe_id not in list(liked_recipes.recipe_id.values):
+                if st.button('👍 Like', f'like-{recipe.recipe_id}'):
+                    save_like(app, recipe.recipe_id, 1)
+                    st.experimental_rerun()
+            else:
+                if st.button('✋ Unlike', f'like-{recipe.recipe_id}'):
+                    clear_like(app, recipe.recipe_id)
+                    st.experimental_rerun()
+
+            if st.button('👎 Dislike', f'dislike-{recipe.recipe_id}'):
+                save_like(app, recipe.recipe_id, 0)
+                st.experimental_rerun()
 
             st.markdown("---")
 
-            st.write(f'###### Rating: {float(recipe.rating_mean)}')
+            st.write(f'###### Rating: {np.round(float(recipe.rating_mean), 2)}')
             st.write(f'###### Reviews: {int(recipe.rating_count)}')
 
             st.markdown("---")

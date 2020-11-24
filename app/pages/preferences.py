@@ -13,7 +13,7 @@ import time
 import os
 
 
-def run():
+def run(app):
     # Display headers
     st.write("# Profile")
     st.write(f"🙎 Please update your personal preferences.")
