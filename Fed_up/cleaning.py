@@ -6,7 +6,7 @@ from nltk.tokenize import word_tokenize
 import nltk
 from nltk.stem import WordNetLemmatizer
 
-from Fed_up.recipe import get_data
+#from Fed_up.recipe import get_data
 
 nltk.download('wordnet')
 nltk.download('stopwords')
@@ -60,16 +60,17 @@ def cleaning_strings(df_series, remove_punc=True, lower_c=True, remove_num=True,
 
 
 if __name__ == "__main__":
-    data = get_data().head(100)
-    columns = ['steps', 'description', 'tags', 'ingredients']
-    #print(data.info())
-    print("")
-    print("********************")
+    pass
+    # data = get_data().head(100)
+    # columns = ['steps', 'description', 'tags', 'ingredients']
+    # #print(data.info())
+    # print("")
+    # print("********************")
 
-    for column in columns:
-        #print(type(data[column]))
-        #import ipdb; ipdb.set_trace()
-        data[column] = cleaning_strings(data[column])
+    # for column in columns:
+    #     #print(type(data[column]))
+    #     #import ipdb; ipdb.set_trace()
+    #     data[column] = cleaning_strings(data[column])
 
 
-    print(data[columns].head(50))
+    # print(data[columns].head(50))
