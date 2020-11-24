@@ -38,7 +38,7 @@ def diet_filter(df, diet):
         for meat in MEAT_LIST:
             df = df[(~df["tags"].str.contains(meat))&(~df["ingredients"].str.contains(meat))]
         return df
-    elif diet == 'low-carb':
+    elif diet == 'low carb':
         return df[df["tags"].str.contains(diet)]
 
 
@@ -106,10 +106,10 @@ def manual_dislikes_filter(df, manual_dislikes_input):
 ## Filtering User's Goals (Maintain Weight, Lose Weight, Gain Weight, Build Muscle)
 def goals_filter(df, goal):
     goals = {
-        'maintain': { 'carb': 50.0, 'protein': 20.0, 'fat': 30.0},
-        'lose': {'carb': 30.0, 'protein': 25.0, 'fat': 45.0},
-        'gain': {'carb': 55.0, 'protein': 20.0, 'fat': 25.0},
-        'build': {'carb': 35.0, 'protein': 40.0, 'fat': 25.0}
+        'maintain weight': { 'carb': 50.0, 'protein': 20.0, 'fat': 30.0},
+        'lose weight': {'carb': 30.0, 'protein': 25.0, 'fat': 45.0},
+        'gain weight': {'carb': 55.0, 'protein': 20.0, 'fat': 25.0},
+        'build muscle': {'carb': 35.0, 'protein': 40.0, 'fat': 25.0}
     }
     filter_df = df.copy()
 

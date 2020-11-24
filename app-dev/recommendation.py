@@ -32,7 +32,8 @@ def recommendation(data):
     st.sidebar.markdown("#### Feel free to adjust your search.")
     st.sidebar.markdown("    ")
 
-    time = st.sidebar.slider("How patient are you today? (Minutes)", 15, 120, 60)
+    time = st.sidebar.slider("How patient are you today? (Minutes)", 15, 120, self.time)
+    self.time = time
     steps = st.sidebar.slider("Define complexity? (steps)", 3, 20, 7)
     n_ingreds = st.sidebar.slider("How many different ingredients do you want?", 3, 25, 13)
     persons = st.sidebar.slider("For how many are you cooking?", 1, 20, 2)
