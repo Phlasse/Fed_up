@@ -13,8 +13,8 @@ import time
 import os
 
 
-def run():
+def run(app):
     # Display headers
     st.write("# Dashboard")
-    st.write(f"📊 Check your nutrition stats.")
+    st.write(f"📊 Check your food and nutrition stats.")
     st.markdown("---")
