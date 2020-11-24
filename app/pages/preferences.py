@@ -15,7 +15,7 @@ import os
 import storage
 
 
-LIST_DIET = ['Classic', 'Low Carb', 'Pescetarian', 'Vegetarian', 'Vegan']
+LIST_DIET = ['Classic', 'Pescetarian', 'Vegetarian', 'Vegan']
 
 LIST_GOAL = ['Maintain Weight','Lose Weight','Gain Weight','Build Muscle']
 

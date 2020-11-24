@@ -49,8 +49,8 @@ def run(app):
     time, steps, ingreds, n_recipes = side_filters(app)
 
     data = generate_recs(app)
-    disliked_recipe_ids = app.user_dislikes.recipe_id.values
-    filtered_data = data[(~data.recipe_id.isin(disliked_recipe_ids)) & (data.minutes<=time) & (data.n_steps<=steps) & (data.n_ingredients<=ingreds)]
+    filtered_data = data[(data.minutes<=time) & (data.n_steps<=steps) & (data.n_ingredients<=ingreds)]
+    filtered_data = filtered_data.drop_duplicates()
 
     if len(filtered_data.head(n_recipes)) > 0:
         for index, recipe in filtered_data.head(n_recipes).iterrows():

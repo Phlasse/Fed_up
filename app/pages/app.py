@@ -25,11 +25,9 @@ import dashboard
 CSS = """
 """
 
+st.set_page_config(page_title='FedUp', page_icon="🍲", layout='centered', initial_sidebar_state='collapsed')
 st.write(f'<style>{CSS}</style>', unsafe_allow_html=True)
 
-# img_fed_up = Image.open("Fed_up/data/samples/logo.png")
-# img_fed_up_sidebar = Image.open("Fed_up/data/samples/sidebar_logo.png")
-# st.sidebar.image(img_fed_up_sidebar, width=200)
 
 @st.cache(suppress_st_warning=True)
 def load_matrices(recipes_path, content_matrix_path, rating_matrix_path):
@@ -42,6 +40,7 @@ def load_matrices(recipes_path, content_matrix_path, rating_matrix_path):
 class MultiApp:
 
     def __init__(self):
+
         self.apps = []
 
         self.user_id = 3
@@ -71,11 +70,11 @@ class MultiApp:
         self.user_checkouts = self.checkouts[(self.checkouts.app_user_id == self.user_id)]
 
 
-    def heavy_load(self):
-        recipes, content_matrix, rating_matrix = load_matrices(self.recipes_path, self.content_matrix_path, self.rating_matrix_path)
-        self.recipes = recipes
-        self.content_matrix = content_matrix
-        self.rating_matrix = rating_matrix
+    # def heavy_load(self):
+    #     recipes, content_matrix, rating_matrix = load_matrices(self.recipes_path, self.content_matrix_path, self.rating_matrix_path)
+    #     self.recipes = recipes
+    #     self.content_matrix = content_matrix
+    #     self.rating_matrix = rating_matrix
 
 
     def set_time(self, time):
@@ -128,7 +127,7 @@ class MultiApp:
     def run(self):
         logo_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets/sidebar_logo.png")) # TO DO: DEFINE PROPER PATH
         img_fed_up = Image.open(logo_path)
-        st.sidebar.image(img_fed_up, width=150)
+        st.sidebar.image(img_fed_up, width=180)
 
         app = st.sidebar.radio(
             ' ',
@@ -146,6 +145,6 @@ if __name__ == "__main__":
     app.add_app("Recommendations", recommendation.run)
     app.add_app("Liked Recipes", liked.run)
     app.add_app("Checkout", checkout.run)
-    app.add_app("Dashboard", dashboard.run)
+    # app.add_app("Dashboard", dashboard.run)
     app.run()
     # app.heavy_load()

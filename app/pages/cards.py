@@ -22,9 +22,21 @@ def draw_recipe(app, recipe, scope):
         st.write(f"### **{title}**")
         st.write(" ")
 
-        # description = (". ").join([sentence.capitalize() for sentence in recipe.description.split(". ")])
-        # st.write(f"###### {description}")
-        # st.write(" ")
+        response_pic = requests.get(recipe['image_url'])
+        img = Image.open(BytesIO(response_pic.content))
+        st.image(img, width=500)
+        st.write(" ")
+
+        # description = (". ").join([sentence.strip().capitalize() for sentence in recipe.description.split("."|"!")])
+        # st.write(f"{description}")
+
+        clean_ingredients = [ing.strip().lower() for ing in eval(recipe['ingredients'])]
+        ingredients = (", ").join(clean_ingredients)
+        st.write(f"**Ingredients ({len(clean_ingredients)}):** {ingredients}.")
+
+        clean_steps = [step.strip().lower() for step in eval(recipe['steps'])]
+        steps = (", ").join(clean_steps)
+        st.write(f"**Steps ({len(clean_steps)}):** {steps}.")
 
 
     with recipe_liker: # Manage option
@@ -58,6 +70,7 @@ def draw_recipe(app, recipe, scope):
             ckout = st.checkbox("Checkout", value=value, key=f'ckout-{recipe.recipe_id}')
 
             if ckout:
+                storage.save_like(app, recipe.recipe_id, 1)
                 storage.add_to_checkout(app, recipe.recipe_id)
                 # st.experimental_rerun()
             else:
@@ -83,16 +96,17 @@ def draw_recipe(app, recipe, scope):
             st.write(f'###### Rating: {np.round(float(recipe.rating_mean), 2)}')
             st.write(f'###### Reviews: {int(recipe.rating_count)}')
 
-            st.markdown("---")
 
-            st.write(f'###### **Calories: {float(recipe.calories)} Cal**')
-            st.write(f'###### Total fat: {float(recipe.total_fat)} %')
-            st.write(f'###### Saturated fat: {float(recipe.saturated_fat)} %')
-            st.write(f'###### Sugar: {float(recipe.sugar)} %')
-            st.write(f'###### Sodium: {float(recipe.sodium)} %')
-            st.write(f'###### Protein: {float(recipe.protein)} %')
-            st.write(f'###### Carbs: {float(recipe.carbohydrates)} %')
-            st.write(' ')
-            st.write(f'###### *For a daily intake of 2000 calories*')
+        st.markdown("---")
+
+        st.write(f'###### **Calories: {float(recipe.calories)} Cal**')
+        st.write(f'###### Total fat: {float(recipe.total_fat)} %')
+        st.write(f'###### Saturated fat: {float(recipe.saturated_fat)} %')
+        st.write(f'###### Sugar: {float(recipe.sugar)} %')
+        st.write(f'###### Sodium: {float(recipe.sodium)} %')
+        st.write(f'###### Protein: {float(recipe.protein)} %')
+        st.write(f'###### Carbs: {float(recipe.carbohydrates)} %')
+        st.write(' ')
+        st.write(f'###### *For a daily intake of 2000 calories*')
 
     st.write(" ")

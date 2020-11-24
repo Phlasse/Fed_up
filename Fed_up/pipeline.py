@@ -4,6 +4,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import ipdb
 
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.decomposition import TruncatedSVD, PCA, NMF
@@ -188,7 +189,7 @@ def get_user_recommendations(user_inputs = None, n_recommendations = None,
     if clear_neg:
         grouped_recommendations = grouped_recommendations[grouped_recommendations['hybrid'] > 0]
 
-    prints("Generating recommendation scores...")
+    print("Generating recommendation scores...")
 
     score_min = grouped_recommendations['hybrid'].min()
     score_max = grouped_recommendations['hybrid'].max()
@@ -197,7 +198,7 @@ def get_user_recommendations(user_inputs = None, n_recommendations = None,
     grouped_recommendations['rec_score'] = np.round((grouped_recommendations['hybrid'] - score_min) / score_dif, 3)
     grouped_recommendations.sort_values(by='rec_score', ascending=False, inplace=True)
 
-    prints("Returning final recommendation matrix!")
+    print("Returning final recommendation matrix!")
 
     if n_recommendations:
         grouped_recommendations = grouped_recommendations.head(n_recommendations)
