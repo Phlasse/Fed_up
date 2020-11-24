@@ -27,7 +27,7 @@ def get_raw_data():
     raw_df = pd.read_csv(f'{csv_path}/RAW_recipes.csv', converters=converters)
     image_df = pd.read_csv(f'{csv_path}/image_df.csv')
     raw_images = raw_df.merge(image_df, how='inner', on='id')
-    print(raw_images.shape)
+    #print(raw_images.shape)
     return raw_images
 
 
