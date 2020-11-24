@@ -14,8 +14,7 @@ import os
 
 
 def save_like(app, rid, liked):
-
-    info = app.likes[(app.likes.app_user_id == app.user_id) & (app.likes.recipe_id == rid)]
+    info = app.user_likes[app.user_likes.recipe_id == rid]
 
     if len(info) == 1:
         index = info.index[0]
@@ -28,8 +27,7 @@ def save_like(app, rid, liked):
 
 
 def clear_like(app, rid):
-
-    info = app.likes[(app.likes.app_user_id == app.user_id) & (app.likes.recipe_id == rid)]
+    info = app.user_likes[app.user_likes.recipe_id == rid]
 
     if len(info) == 1:
         index = info.index[0]
@@ -37,10 +35,27 @@ def clear_like(app, rid):
         app.likes.to_csv(app.likes_path, index=False)
 
 
-def draw_recipe(app, recipe, scope):
-    recipe_show_1, space, recipe_liker = st.beta_columns([4, 0.5, 1])
+def add_to_checkout(app, rid):
+    info = app.checkouts[app.checkouts.recipe_id == rid]
 
-    with recipe_show_1: # Display next item
+    if len(info) < 1:
+        app.checkouts = app.checkouts.append({'app_user_id': app.user_id, 'recipe_id': rid, 'timestamp': pd.Timestamp.now()}, ignore_index=True)
+        app.checkouts.to_csv(app.checkouts_path, index=False)
+
+
+def remove_from_checkout(app, rid):
+    info = app.checkouts[app.checkouts.recipe_id == rid]
+
+    if len(info) == 1:
+        index = info.index[0]
+        app.checkouts.drop(app.checkouts.index[index], inplace=True)
+        app.checkouts.to_csv(app.checkouts_path, index=False)
+
+
+def draw_recipe(app, recipe, scope):
+    recipe_show, _space, recipe_liker = st.beta_columns([4, 0.5, 1])
+
+    with recipe_show: # Display next item
         title = recipe['name'].replace(" s ", "'s ").upper()
         st.write(f"### **{title}**")
         st.write(" ")
@@ -66,19 +81,27 @@ def draw_recipe(app, recipe, scope):
 
             st.markdown("---")
 
-            st.write(f"###### {len(app.likes[(app.likes['liked'] == 1) & (app.likes['app_user_id'] == app.user_id)])} Liked")
-            st.write(f"###### {len(app.likes[(app.likes['liked'] == 0) & (app.likes['app_user_id'] == app.user_id)])} Disliked")
+            st.write(f"###### {len(app.user_likes)} Liked")
+            st.write(f"###### {len(app.user_dislikes)} Disliked")
 
         elif scope == 'recommendation' or scope == 'liked':
 
             st.write(" ")
 
-            if st.checkbox('Checkout', False, f'dislike-{recipe.recipe_id}'):
-                pass
+            if recipe.recipe_id in list(app.user_checkouts.recipe_id.values):
+                value = True
+            else:
+                value = False
 
-            liked_recipes = app.likes[(app.likes.app_user_id == app.user_id) & (app.likes.liked == 1)]
+            ckout = st.checkbox("Checkout", value=value, key=f'ckout-{recipe.recipe_id}')
 
-            if recipe.recipe_id not in list(liked_recipes.recipe_id.values):
+            if ckout:
+                add_to_checkout(app, recipe.recipe_id)
+            else:
+                remove_from_checkout(app, recipe.recipe_id)
+
+            liked_recipes_ids = app.user_likes.recipe_id.values
+            if recipe.recipe_id not in list(liked_recipes_ids):
                 if st.button('👍 Like', f'like-{recipe.recipe_id}'):
                     save_like(app, recipe.recipe_id, 1)
                     st.experimental_rerun()

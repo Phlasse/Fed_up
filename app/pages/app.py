@@ -44,11 +44,20 @@ class MultiApp:
 
         self.prefs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/user_prefs.csv")) # TO DO: DEFINE PROPER PATH
         self.prefs = pd.read_csv(self.prefs_path)
+        self.user_prefs = self.prefs[self.prefs.app_user_id == self.user_id]
 
-        self.user_name = self.prefs[self.prefs.app_user_id == self.user_id].name.values[0]
+        self.user_name = self.user_prefs.name.values[0]
 
         self.likes_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/user_likes.csv")) # TO DO: DEFINE PROPER PATH
         self.likes = pd.read_csv(self.likes_path)
+
+        self.user_rates = self.likes[(self.likes.app_user_id == self.user_id)]
+        self.user_likes = self.user_rates[(self.user_rates.liked == 1)]
+        self.user_dislikes = self.user_rates[(self.user_rates.liked == 0)]
+
+        self.checkouts_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/user_checkouts.csv")) # TO DO: DEFINE PROPER PATH
+        self.checkouts = pd.read_csv(self.checkouts_path)
+        self.user_checkouts = self.checkouts[(self.checkouts.app_user_id == self.user_id)]
 
 
     def add_app(self, title, func):
@@ -59,6 +68,9 @@ class MultiApp:
 
 
     def run(self):
+        logo_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets/sidebar_logo.png")) # TO DO: DEFINE PROPER PATH
+        img_fed_up = Image.open(logo_path)
+        st.sidebar.image(img_fed_up, width=150)
 
         app = st.sidebar.radio(
             ' ',

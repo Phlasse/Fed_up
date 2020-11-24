@@ -37,7 +37,8 @@ def run(app):
     collab = st.sidebar.slider("How much would you like to try new flavors?", 0, 100, 50)
 
     data = generate_recs(app, collab)
-    filtered_data = data[(data.minutes<=time) & (data.n_steps<=steps) & (data.n_ingredients<=n_ingreds)]
+    disliked_recipe_ids = app.user_dislikes.recipe_id.values
+    filtered_data = data[(~data.recipe_id.isin(disliked_recipe_ids)) & (data.minutes<=time) & (data.n_steps<=steps) & (data.n_ingredients<=n_ingreds)]
 
     for index, recipe in filtered_data.head(n_recipes).iterrows():
         draw_recipe(app, recipe, 'recommendation')
