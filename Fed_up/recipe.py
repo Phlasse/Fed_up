@@ -25,7 +25,10 @@ def get_raw_data():
     converters = {col: eval for col in LIST_COLS}
     csv_path = os.path.join(os.path.dirname(__file__), "data/raw")
     raw_df = pd.read_csv(f'{csv_path}/RAW_recipes.csv', converters=converters)
-    return raw_df
+    image_df = pd.read_csv(f'{csv_path}/image_df.csv')
+    raw_images = raw_df.merge(image_df, how='inner', on='id')
+    #print(raw_images.shape)
+    return raw_images
 
 
 def select_universe(df):
@@ -142,7 +145,7 @@ def clean_data(df):
     # Reorganizing column position (note: nutrition list column is dropped)
     ordered_cols = ['recipe_id', 'user_id', 'name', 'rating_mean', 'rating_count', 'minutes', 'n_steps',
                     'n_ingredients', 'calories', 'total_fat', 'sugar', 'sodium', 'protein', 'saturated_fat',
-                    'carbohydrates', 'tags', 'ingredients', 'steps', 'description', 'metadata', 'submitted']
+                    'carbohydrates', 'tags', 'ingredients', 'steps', 'description', 'metadata', 'submitted', 'image_url']
 
     target_df = pd.DataFrame(df, columns=ordered_cols)
     return target_df
