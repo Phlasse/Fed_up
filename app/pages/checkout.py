@@ -12,11 +12,10 @@ import ipdb
 import time
 import os
 
-
 def run(app):
     # Display headers
     checkout_ids = app.user_checkouts
-    selected_recipe_ids=[236834, 265381, 283173]
+    selected_recipe_ids=[236834]#, 265381, 283173]
     recipe_df = app.recipes
     selected_recipes_df = recipe_df[recipe_df.recipe_id.isin(selected_recipe_ids)]
     st.write("# Checkout")
@@ -40,10 +39,19 @@ def run(app):
     ing_list_exp = pd.DataFrame()
     ing_list_exp["Ingredient"] = list(summed_ingredients.keys())
     ing_list_exp["Quantity"] = list(summed_ingredients.values())
+    #################################
+    ### Export to Microsoft To Do ###
+    #################################
+    #ToDo = st.button("Export to Microsoft to do")
+    #if ToDo:
+
+    #    for key, value in summed_ingredients.items():
+    #        call_url= f"https://hook.integromat.com/5oboi86rrbc1qsf5koeulfmtwn76c9qg?Subject={key}%20{value}%20x&note=Subscribe%20to%20Fed-up&list=Fed-up"
+    #        call = requests.get(call_url)
+
     ###########################
     ### weird export option ###
     ###########################
-
     txt = ing_list_exp.to_csv(index = False)
     b64 = base64.b64encode(txt.encode()).decode()
     href = f'<a href="data:file/ingredients.txt;base64,{b64}">Download</a> (right-click and save as Grocery.txt)'
