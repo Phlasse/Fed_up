@@ -19,7 +19,6 @@ import argparse
 from google.cloud import storage
 from google.oauth2 import service_account
 import json
-import _cffi_backend as backend
 
 import home
 import preferences
@@ -45,32 +44,17 @@ PROJECT_ID = "fed-up-2020"
 
 @st.cache(show_spinner=False)
 def load_inputs(recipes_path, content_matrix_path, rating_matrix_path, creds=''):
-    if creds:
-        client = storage.Client(credentials=creds, project=PROJECT_ID).bucket(BUCKET_NAME)
-
     recipes = pd.read_csv(recipes_path)
     content_matrix = pd.read_csv(content_matrix_path).rename(columns={'Unnamed: 0': 'recipe_id'}).set_index('recipe_id')
     rating_matrix = pd.read_csv(rating_matrix_path).rename(columns={'Unnamed: 0': 'recipe_id'}).set_index('recipe_id')
     return recipes, content_matrix, rating_matrix
 
 
-@st.cache(show_spinner=False)
-def get_credentials():
-    credentials_raw = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
-    if '.json' in credentials_raw:
-        credentials_raw = open(credentials_raw).read()
-    creds_json = json.loads(credentials_raw)
-    creds_gcp = service_account.Credentials.from_service_account_info(creds_json)
-    return creds_gcp
-
-
 class MultiApp:
-
 
     def __init__(self, local=True):
         self.local = local
         self.apps = []
-
         self.user_id = 3
 
         if self.local:
@@ -82,13 +66,13 @@ class MultiApp:
             self.rating_matrix_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/rating_latent.csv"))
             self.creds = ''
         else:
-            self.recipes_path = f"gs://fed-up-bucket-01/data/app/recipe_pp.csv"
-            self.prefs_path = f"gs://fed-up-bucket-01/data/app/user_prefs.csv"
-            self.likes_path = f"gs://fed-up-bucket-01/data/app/recipe_pp.csv"
-            self.checkouts_path = f"gs://fed-up-bucket-01/data/app/user_checkouts.csv"
-            self.content_matrix_path = f"gs://fed-up-bucket-01/data/app/content_latent.csv"
-            self.rating_matrix_path = f"gs://fed-up-bucket-01/data/app/rating_latent.csv"
-            self.creds = get_credentials()
+            self.recipes_path = f"https://storage.googleapis.com/fed-up-bucket-01/data/app/recipe_pp.csv"
+            self.prefs_path = f"https://storage.googleapis.com/fed-up-bucket-01/data/app/user_prefs.csv"
+            self.likes_path = f"https://storage.googleapis.com/fed-up-bucket-01/data/app/user_likes.csv"
+            self.checkouts_path = f"https://storage.googleapis.com/fed-up-bucket-01/data/app/user_checkouts.csv"
+            self.content_matrix_path = f"https://storage.googleapis.com/fed-up-bucket-01/data/app/content_latent.csv"
+            self.rating_matrix_path = f"https://storage.googleapis.com/fed-up-bucket-01/data/app/rating_latent.csv"
+            self.creds = ''
 
         self.load_static_data()
         self.load_basic_data()
