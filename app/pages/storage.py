@@ -8,7 +8,6 @@ import base64
 from PIL import Image
 from io import BytesIO
 import requests
-import ipdb
 import time
 import os
 
@@ -26,6 +25,7 @@ def save_prefs(app, form={}):
         prefs.loc[index, 'dislikes'] = form['dislikes']
         prefs.loc[index, 'custom_dsl'] = form['custom_dsl']
         prefs.loc[index, 'collab'] = form['collab']
+
         prefs.to_csv(app.prefs_path, index=False)
         st.success("Profile information saved!")
 

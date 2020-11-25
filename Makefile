@@ -58,3 +58,11 @@ pypi_test:
 
 pypi:
 	@twine upload dist/* -u lologibus2
+
+
+# ----------------------------------
+#      HEROKU - GOOGLE CREDENTIALS
+# ----------------------------------
+
+heroku_set_gcp_env:
+	-@heroku config:set GOOGLE_APPLICATION_CREDENTIALS=$(GOOGLE_APPLICATION_CREDENTIALS)

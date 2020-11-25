@@ -8,7 +8,6 @@ import base64
 from PIL import Image
 from io import BytesIO
 import requests
-import ipdb
 import time
 import os
 
@@ -101,7 +100,7 @@ def run(app):
     else:
         collab_default = float(user_info.collab.values[0])
 
-    collab = st.slider("Do you want to taste new recipes?", 0, 100, int(collab_default * 100))
+    collab = st.slider("Do you want to taste new recipes?", 0, 10, int(collab_default * 10))
     st.write(' ')
 
     # else:

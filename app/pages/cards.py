@@ -8,7 +8,6 @@ import base64
 from PIL import Image
 from io import BytesIO
 import requests
-import ipdb
 import time
 import os
 
@@ -26,7 +25,12 @@ def draw_recipe(app, recipe, scope):
         response_pic = requests.get(recipe['image_url'])
         img = Image.open(BytesIO(response_pic.content))
         st.image(img, width=500)
+
+        if scope == 'recommendation':
+            st.progress(int(recipe['rec_score']*100))
+
         st.write(" ")
+
 
         # description = (". ").join([sentence.strip().capitalize() for sentence in recipe.description.split("."|"!")])
         # st.write(f"{description}")
@@ -71,7 +75,6 @@ def draw_recipe(app, recipe, scope):
             ckout = st.checkbox("Checkout", value=value, key=f'ckout-{recipe.recipe_id}')
 
             if ckout:
-                storage.save_like(app, recipe.recipe_id, 1)
                 storage.add_to_checkout(app, recipe.recipe_id)
                 # st.experimental_rerun()
             else:
@@ -86,10 +89,12 @@ def draw_recipe(app, recipe, scope):
             else:
                 if st.button('✋ Unlike', f'like-{recipe.recipe_id}'):
                     storage.clear_like(app, recipe.recipe_id)
+                    storage.remove_from_checkout(app, recipe.recipe_id)
                     st.experimental_rerun()
 
             if st.button('👎 Dislike', f'dislike-{recipe.recipe_id}'):
                 storage.save_like(app, recipe.recipe_id, 0)
+                storage.remove_from_checkout(app, recipe.recipe_id)
                 st.experimental_rerun()
 
             st.markdown("---")
