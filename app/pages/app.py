@@ -26,15 +26,17 @@ import preferences
 import roulette
 import recommendation
 import liked
+import checked
 import checkout
 
 
 CSS = """
     img {border-radius: 4px;}
-    .stProgress > div > div > div { background: linear-gradient(135deg, rgba(149,214,164,1) 0%, rgba(1,85,98,1) 100%); }
+    .stProgress > div > div > div { background: linear-gradient(135deg, #95D6A4 0%, #78C2A4 100%); }
+    table {font-family: "IBM Plex Sans", sans-serif;}
 """
 
-st.set_page_config(page_title='FedUp', page_icon="🍲", layout='centered', initial_sidebar_state='collapsed')
+st.set_page_config(page_title='Fed Up!', page_icon="🍲", layout='centered')
 st.write(f'<style>{CSS}</style>', unsafe_allow_html=True)
 
 BUCKET_NAME = "fed-up-bucket-01"
@@ -202,12 +204,8 @@ if __name__ == "__main__":
     app.add_app("Food Roulette", roulette.run)
     app.add_app("Recommendations", recommendation.run)
     app.add_app("Liked Recipes", liked.run)
+    app.add_app("Checked Recipes", checked.run)
     app.add_app("Checkout", checkout.run)
 
     # Run the app
     app.run()
-
-    # Loading data
-    # app.load_static_data()
-    # app.load_basic_data()
-    # app.load_user_data()
