@@ -126,6 +126,6 @@ def run(app):
                 'allergies': (', ').join(allergies).lower(),
                 'dislikes': (', ').join(dislikes).lower(),
                 'custom_dsl': custom_dsl.lower(),
-                'collab': float(collab)/100}
+                'collab': float(collab)/10}
 
         storage.save_prefs(app, form=form)

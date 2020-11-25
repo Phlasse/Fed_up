@@ -63,7 +63,7 @@ def draw_recipe(app, recipe, scope):
             st.write(f"###### {len(app.user_likes)} Liked")
             st.write(f"###### {len(app.user_dislikes)} Disliked")
 
-        elif scope == 'recommendation' or scope == 'liked':
+        elif scope == 'recommendation' or scope == 'liked' or scope == 'checked':
 
             st.write(" ")
 
@@ -76,26 +76,29 @@ def draw_recipe(app, recipe, scope):
 
             if ckout:
                 storage.add_to_checkout(app, recipe.recipe_id)
-                # st.experimental_rerun()
+                # if scope == 'checked':
+                #     st.experimental_rerun()
             else:
                 storage.remove_from_checkout(app, recipe.recipe_id)
-                # st.experimental_rerun()
+                # if scope == 'checked':
+                #     st.experimental_rerun()
 
             liked_recipes_ids = app.user_likes.recipe_id.values
             if recipe.recipe_id not in list(liked_recipes_ids):
                 if st.button('👍 Like', f'like-{recipe.recipe_id}'):
                     storage.save_like(app, recipe.recipe_id, 1)
-                    st.experimental_rerun()
+                    if scope == 'liked':
+                        st.experimental_rerun()
             else:
                 if st.button('✋ Unlike', f'like-{recipe.recipe_id}'):
                     storage.clear_like(app, recipe.recipe_id)
-                    storage.remove_from_checkout(app, recipe.recipe_id)
-                    st.experimental_rerun()
+                    if scope == 'liked':
+                        st.experimental_rerun()
 
             if st.button('👎 Dislike', f'dislike-{recipe.recipe_id}'):
                 storage.save_like(app, recipe.recipe_id, 0)
-                storage.remove_from_checkout(app, recipe.recipe_id)
-                st.experimental_rerun()
+                if scope == 'liked':
+                        st.experimental_rerun()
 
             st.markdown("---")
 

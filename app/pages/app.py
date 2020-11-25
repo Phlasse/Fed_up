@@ -12,30 +12,30 @@ from io import BytesIO
 import requests
 import time
 import os
+
+import sys
+import argparse
+
 from google.cloud import storage
 from google.oauth2 import service_account
 import json
-import _cffi_backend as backend
-
 
 import home
 import preferences
 import roulette
 import recommendation
 import liked
-import dashboard
+import checked
 import checkout
 
 
 CSS = """
-    img {
-        border-radius: 4px;
-    }
-
-    .stProgress .st-ep { background: linear-gradient(135deg, rgba(149,214,164,1) 0%, rgba(1,85,98,1) 100%); }
+    img {border-radius: 4px;}
+    .stProgress > div > div > div { background: linear-gradient(135deg, #95D6A4 0%, #78C2A4 100%); }
+    table {font-family: "IBM Plex Sans", sans-serif;}
 """
 
-st.set_page_config(page_title='FedUp', page_icon="🍲", layout='centered', initial_sidebar_state='collapsed')
+st.set_page_config(page_title='Fed Up!', page_icon="🍲", layout='centered')
 st.write(f'<style>{CSS}</style>', unsafe_allow_html=True)
 
 BUCKET_NAME = "fed-up-bucket-01"
@@ -44,35 +44,20 @@ PROJECT_ID = "fed-up-2020"
 
 @st.cache(show_spinner=False)
 def load_inputs(recipes_path, content_matrix_path, rating_matrix_path, creds=''):
-    #if creds:
-    #client = storage.Client()
     recipes = pd.read_csv(recipes_path)
     content_matrix = pd.read_csv(content_matrix_path).rename(columns={'Unnamed: 0': 'recipe_id'}).set_index('recipe_id')
     rating_matrix = pd.read_csv(rating_matrix_path).rename(columns={'Unnamed: 0': 'recipe_id'}).set_index('recipe_id')
     return recipes, content_matrix, rating_matrix
 
 
-#@st.cache(show_spinner=False)
-# def get_credentials():
-#     credentials_raw = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
-#     if '.json' in credentials_raw:
-#         credentials_raw = open(credentials_raw).read()
-#     credentials_raw = credentials_raw.replace("\\n","")
-#     creds_json = json.loads(credentials_raw)
-#     creds_gcp = service_account.Credentials.from_service_account_info(creds_json)
-#     return creds_gcp
-
-
 class MultiApp:
 
-    def __init__(self, local=False):
-
+    def __init__(self, local=True):
+        self.local = local
         self.apps = []
-
         self.user_id = 3
 
-        if local:
-            self.local = True
+        if self.local:
             self.recipes_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/recipe_pp.csv"))
             self.prefs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/user_prefs.csv"))
             self.likes_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/user_likes.csv"))
@@ -81,7 +66,6 @@ class MultiApp:
             self.rating_matrix_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/rating_latent.csv"))
             self.creds = ''
         else:
-            self.local = False
             self.recipes_path = f"https://storage.googleapis.com/fed-up-bucket-01/data/app/recipe_pp.csv"
             self.prefs_path = f"https://storage.googleapis.com/fed-up-bucket-01/data/app/user_prefs.csv"
             self.likes_path = f"https://storage.googleapis.com/fed-up-bucket-01/data/app/user_likes.csv"
@@ -95,11 +79,7 @@ class MultiApp:
         self.load_user_data()
 
 
-
-
-
     def load_static_data(self):
-
         recipes, content_matrix, rating_matrix = load_inputs(self.recipes_path, self.content_matrix_path, self.rating_matrix_path, creds=self.creds)
         self.recipes = recipes
         self.content_matrix = content_matrix
@@ -193,8 +173,14 @@ class MultiApp:
 
 if __name__ == "__main__":
 
+    # Getting args
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--local', action='store', dest='local',
+                        help='Flag for Debug mode', default=True)
+    args = parser.parse_args()
+
     # Start app
-    app = MultiApp()
+    app = MultiApp(args.local)
 
     # Add pages
     app.add_app("Home", home.run)
@@ -202,13 +188,8 @@ if __name__ == "__main__":
     app.add_app("Food Roulette", roulette.run)
     app.add_app("Recommendations", recommendation.run)
     app.add_app("Liked Recipes", liked.run)
-    # app.add_app("Dashboard", dashboard.run)
+    app.add_app("Checked Recipes", checked.run)
     app.add_app("Checkout", checkout.run)
 
     # Run the app
     app.run()
-
-    # Loading data
-    # app.load_static_data()
-    # app.load_basic_data()
-    # app.load_user_data()

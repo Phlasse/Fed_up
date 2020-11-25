@@ -53,8 +53,8 @@ def main():
     st.markdown(page_bg_img, unsafe_allow_html=True)
 
     # Homepage: Text content
-    st.markdown("<h1 style='text-align: justified; color: white;'>Welcome to FedUp!</h1>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: justified; color: white;'>Fed up! provides you with personalized meal recommendations based on your food preferences and personal diet plan.</h3>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: justified; color: white;'>Welcome to Fed Up!</h1>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: justified; color: white;'>Fed Up! provides you with personalized meal recommendations based on your food preferences and personal diet plan.</h3>", unsafe_allow_html=True)
 
     menu = ["","Log in","Sign up"]
     choice = st.selectbox("Log in or sign up",menu)
