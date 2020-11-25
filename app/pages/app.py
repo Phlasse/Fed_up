@@ -14,15 +14,19 @@ import ipdb
 import time
 import os
 
+import home
 import preferences
 import roulette
 import recommendation
 import liked
-import checkout
 import dashboard
+import checkout
 
 
 CSS = """
+    img {
+        border-radius: 4px;
+    }
 """
 
 st.set_page_config(page_title='FedUp', page_icon="🍲", layout='centered', initial_sidebar_state='collapsed')
@@ -140,11 +144,12 @@ class MultiApp:
 if __name__ == "__main__":
 
     app = MultiApp()
+    app.add_app("Home", home.run)
     app.add_app("Profile", preferences.run)
     app.add_app("Food Roulette", roulette.run)
     app.add_app("Recommendations", recommendation.run)
     app.add_app("Liked Recipes", liked.run)
-    app.add_app("Checkout", checkout.run)
     # app.add_app("Dashboard", dashboard.run)
+    app.add_app("Checkout", checkout.run)
     app.run()
     # app.heavy_load()
