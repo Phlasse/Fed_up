@@ -45,7 +45,7 @@ def load_inputs(recipes_path, content_matrix_path, rating_matrix_path):
 
 class MultiApp:
 
-    def __init__(self, local=True):
+    def __init__(self, local=False):
 
         self.apps = []
 
