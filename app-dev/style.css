@@ -3,17 +3,14 @@ style.css
 body {
     color: #fff;
     background-color: #95D6A4;
-    font-weight: bold;
 }
 
 .stButton>button {
     color: #95D6A4;
     border-radius: 70%;
-    height: 3em;
-    width: 3em;
+    background: #95D6A4;
 }
 
 .stTextInput>div>div>input {
     color: #95D6A4;
-    font-weight: bold;
 }
