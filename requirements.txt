@@ -23,8 +23,5 @@ surprise
 streamlit
 ipdb
 gcsfs
-<<<<<<< HEAD
 argparse
-=======
 cffi
->>>>>>> master
