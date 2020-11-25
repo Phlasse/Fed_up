@@ -21,3 +21,5 @@ google-cloud-storage
 scipy
 surprise
 streamlit
+ipdb
+gcsfs
