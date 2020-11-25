@@ -53,14 +53,14 @@ def load_inputs(recipes_path, content_matrix_path, rating_matrix_path, creds='')
 
 
 #@st.cache(show_spinner=False)
-# def get_credentials():
-#     credentials_raw = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
-#     if '.json' in credentials_raw:
-#         credentials_raw = open(credentials_raw).read()
-#     credentials_raw = credentials_raw.replace("\\n","")
-#     creds_json = json.loads(credentials_raw)
-#     creds_gcp = service_account.Credentials.from_service_account_info(creds_json)
-#     return creds_gcp
+def get_credentials():
+    credentials_raw = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+    if '.json' in credentials_raw:
+        credentials_raw = open(credentials_raw).read()
+    credentials_raw = credentials_raw.replace("\\n","")
+    creds_json = json.loads(credentials_raw)
+    creds_gcp = service_account.Credentials.from_service_account_info(creds_json)
+    return creds_gcp
 
 
 class MultiApp:
