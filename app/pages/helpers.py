@@ -8,12 +8,14 @@ import base64
 from PIL import Image
 from io import BytesIO
 import requests
-import ipdb
 import time
 import os
 
 
 def side_filters(app):
+
+    search = st.sidebar.text_input("Search by keyword:")
+
     time = st.sidebar.slider("How long are you willing to wait?", 15, 120, app.get_time())
     app.set_time(time)
 
@@ -26,4 +28,4 @@ def side_filters(app):
     n_recipes = st.sidebar.slider("How many dishes do you want to see?", 5, 40, app.get_n_recipes())
     app.set_n_recipes(n_recipes)
 
-    return time, steps, ingreds, n_recipes
+    return search, time, steps, ingreds, n_recipes

@@ -8,7 +8,6 @@ import base64
 from PIL import Image
 from io import BytesIO
 import requests
-import ipdb
 import time
 import os
 
@@ -24,14 +23,17 @@ def run(app):
     st.markdown("---")
 
     st.sidebar.markdown("---")
-    st.sidebar.markdown("#### Feel free to adjust your search:")
+    st.sidebar.markdown("### Filters")
     st.sidebar.markdown("    ")
 
-    time, steps, ingreds, n_recipes = side_filters(app)
+    search, time, steps, ingreds, n_recipes = side_filters(app)
 
     liked_recipes = app.user_likes.sort_values(by='timestamp', ascending=False)
     data = liked_recipes.merge(app.recipes, on='recipe_id', how='inner')
     filtered_data = data[(data.minutes<=time) & (data.n_steps<=steps) & (data.n_ingredients<=ingreds)]
+
+    if search:
+        filtered_data = filtered_data[filtered_data.metadata.str.contains(search)]
 
     if len(filtered_data.head(n_recipes)) > 0:
         for index, recipe in filtered_data.head(n_recipes).iterrows():
