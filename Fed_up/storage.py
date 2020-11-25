@@ -4,8 +4,10 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import json
 
 from google.cloud import storage
+from google.oauth2 import service_account
 
 BUCKET_NAME = "fed-up-bucket-01"
 PROJECT_ID = "fed-up-2020"
