@@ -14,6 +14,7 @@ import os
 
 import storage
 
+
 def draw_recipe(app, recipe, scope):
     recipe_show, _space, recipe_liker = st.beta_columns([4, 0.5, 1])
 
