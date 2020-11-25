@@ -60,21 +60,6 @@ pypi:
 	@twine upload dist/* -u lologibus2
 
 
-
-
-
-# ----------------------------------
-#      HEROKU - SETTINGS
-# ----------------------------------
-
-deploy_heroku:
-  -@git push heroku master
-  -@heroku ps:scale web=1
-
-heroku_update: deploy_heroku heroku_set_gcp_env
-
-
-
 # ----------------------------------
 #      HEROKU - GOOGLE CREDENTIALS
 # ----------------------------------

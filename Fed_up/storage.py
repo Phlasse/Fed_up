@@ -42,3 +42,7 @@ def upload_file(df, save_path='', filename='', bucket=BUCKET_NAME):
     blob.upload_from_filename(local_path)
     print(f"Uploaded {filename} to GCP!")
 
+
+
+# if __name__ == "__main__":
+#     import_file()

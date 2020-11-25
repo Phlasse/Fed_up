@@ -42,10 +42,10 @@ BUCKET_NAME = "fed-up-bucket-01"
 PROJECT_ID = "fed-up-2020"
 
 
-#@st.cache(show_spinner=False)
+@st.cache(show_spinner=False)
 def load_inputs(recipes_path, content_matrix_path, rating_matrix_path, creds=''):
     #if creds:
-    client = storage.Client()
+    #client = storage.Client()
     recipes = pd.read_csv(recipes_path)
     content_matrix = pd.read_csv(content_matrix_path).rename(columns={'Unnamed: 0': 'recipe_id'}).set_index('recipe_id')
     rating_matrix = pd.read_csv(rating_matrix_path).rename(columns={'Unnamed: 0': 'recipe_id'}).set_index('recipe_id')
@@ -84,7 +84,7 @@ class MultiApp:
             self.local = False
             self.recipes_path = f"gs://fed-up-bucket-01/data/app/recipe_pp.csv"
             self.prefs_path = f"gs://fed-up-bucket-01/data/app/user_prefs.csv"
-            self.likes_path = f"gs://fed-up-bucket-01/data/app/recipe_pp.csv"
+            self.likes_path = f"gs://fed-up-bucket-01/data/app/user_likes.csv"
             self.checkouts_path = f"gs://fed-up-bucket-01/data/app/user_checkouts.csv"
             self.content_matrix_path = f"gs://fed-up-bucket-01/data/app/content_latent.csv"
             self.rating_matrix_path = f"gs://fed-up-bucket-01/data/app/rating_latent.csv"
@@ -99,7 +99,9 @@ class MultiApp:
 
 
     def load_static_data(self):
+
         recipes, content_matrix, rating_matrix = load_inputs(self.recipes_path, self.content_matrix_path, self.rating_matrix_path, creds=self.creds)
+        #import ipdb; ipdb.set_trace()
         self.recipes = recipes
         self.content_matrix = content_matrix
         self.rating_matrix = rating_matrix
