@@ -42,11 +42,10 @@ BUCKET_NAME = "fed-up-bucket-01"
 PROJECT_ID = "fed-up-2020"
 
 
-#@st.cache(show_spinner=False)
+@st.cache(show_spinner=False)
 def load_inputs(recipes_path, content_matrix_path, rating_matrix_path, creds=''):
-    if creds:
-        client = storage.Client(credentials=creds, project=PROJECT_ID).bucket(BUCKET_NAME)
-
+    #if creds:
+    #client = storage.Client()
     recipes = pd.read_csv(recipes_path)
     content_matrix = pd.read_csv(content_matrix_path).rename(columns={'Unnamed: 0': 'recipe_id'}).set_index('recipe_id')
     rating_matrix = pd.read_csv(rating_matrix_path).rename(columns={'Unnamed: 0': 'recipe_id'}).set_index('recipe_id')
@@ -54,13 +53,14 @@ def load_inputs(recipes_path, content_matrix_path, rating_matrix_path, creds='')
 
 
 #@st.cache(show_spinner=False)
-def get_credentials():
-    credentials_raw = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
-    if '.json' in credentials_raw:
-        credentials_raw = open(credentials_raw).read()
-    creds_json = json.loads(credentials_raw)
-    creds_gcp = service_account.Credentials.from_service_account_info(creds_json)
-    return creds_gcp
+# def get_credentials():
+#     credentials_raw = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+#     if '.json' in credentials_raw:
+#         credentials_raw = open(credentials_raw).read()
+#     credentials_raw = credentials_raw.replace("\\n","")
+#     creds_json = json.loads(credentials_raw)
+#     creds_gcp = service_account.Credentials.from_service_account_info(creds_json)
+#     return creds_gcp
 
 
 class MultiApp:
@@ -82,13 +82,13 @@ class MultiApp:
             self.creds = ''
         else:
             self.local = False
-            self.recipes_path = f"gs://fed-up-bucket-01/data/app/recipe_pp.csv"
-            self.prefs_path = f"gs://fed-up-bucket-01/data/app/user_prefs.csv"
-            self.likes_path = f"gs://fed-up-bucket-01/data/app/recipe_pp.csv"
-            self.checkouts_path = f"gs://fed-up-bucket-01/data/app/user_checkouts.csv"
-            self.content_matrix_path = f"gs://fed-up-bucket-01/data/app/content_latent.csv"
-            self.rating_matrix_path = f"gs://fed-up-bucket-01/data/app/rating_latent.csv"
-            self.creds = get_credentials()
+            self.recipes_path = f"https://storage.googleapis.com/fed-up-bucket-01/data/app/recipe_pp.csv"
+            self.prefs_path = f"https://storage.googleapis.com/fed-up-bucket-01/data/app/user_prefs.csv"
+            self.likes_path = f"https://storage.googleapis.com/fed-up-bucket-01/data/app/user_likes.csv"
+            self.checkouts_path = f"https://storage.googleapis.com/fed-up-bucket-01/data/app/user_checkouts.csv"
+            self.content_matrix_path = f"https://storage.googleapis.com/fed-up-bucket-01/data/app/content_latent.csv"
+            self.rating_matrix_path = f"https://storage.googleapis.com/fed-up-bucket-01/data/app/rating_latent.csv"
+            self.creds = ''
 
         self.load_static_data()
         self.load_basic_data()
@@ -99,6 +99,7 @@ class MultiApp:
 
 
     def load_static_data(self):
+
         recipes, content_matrix, rating_matrix = load_inputs(self.recipes_path, self.content_matrix_path, self.rating_matrix_path, creds=self.creds)
         self.recipes = recipes
         self.content_matrix = content_matrix
