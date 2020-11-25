@@ -36,7 +36,7 @@ st.write(f'<style>{CSS}</style>', unsafe_allow_html=True)
 
 
 @st.cache(show_spinner=False)
-def load_inputs(recipes_path, content_matrix_path, rating_matrix_path):
+def load_inputs(recipes_path, content_matrix_path, rating_matrix_path, creds=''):
     recipes = pd.read_csv(recipes_path)
     content_matrix = pd.read_csv(content_matrix_path).rename(columns={'Unnamed: 0': 'recipe_id'}).set_index('recipe_id')
     rating_matrix = pd.read_csv(rating_matrix_path).rename(columns={'Unnamed: 0': 'recipe_id'}).set_index('recipe_id')
@@ -45,7 +45,7 @@ def load_inputs(recipes_path, content_matrix_path, rating_matrix_path):
 
 class MultiApp:
 
-    def __init__(self, local=True):
+    def __init__(self, local=False):
 
         self.apps = []
 
@@ -67,17 +67,33 @@ class MultiApp:
             self.checkouts_path = f"gs://fed-up-bucket-01/data/app/user_checkouts.csv"
             self.content_matrix_path = f"gs://fed-up-bucket-01/data/app/content_latent.csv"
             self.rating_matrix_path = f"gs://fed-up-bucket-01/data/app/rating_latent.csv"
+            self.creds = get_credentials()
 
         self.load_static_data()
         self.load_basic_data()
         self.load_user_data()
 
 
+
+    def get_credentials(self):
+        credentials_raw = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+        if '.json' in credentials_raw:
+            credentials_raw = open(credentials_raw).read()
+        creds_json = json.loads(credentials_raw)
+        creds_gcp = service_account.Credentials.from_service_account_info(creds_json)
+        return creds_gcp
+
     def load_static_data(self):
-        recipes, content_matrix, rating_matrix = load_inputs(self.recipes_path, self.content_matrix_path, self.rating_matrix_path)
-        self.recipes = recipes
-        self.content_matrix = content_matrix
-        self.rating_matrix = rating_matrix
+        if self.local:
+            recipes, content_matrix, rating_matrix = load_inputs(self.recipes_path, self.content_matrix_path, self.rating_matrix_path)
+            self.recipes = recipes
+            self.content_matrix = content_matrix
+            self.rating_matrix = rating_matrix
+        else:
+            recipes, content_matrix, rating_matrix = load_inputs(self.recipes_path, self.content_matrix_path, self.rating_matrix_path, creds=self.creds)
+            self.recipes = recipes
+            self.content_matrix = content_matrix
+            self.rating_matrix = rating_matrix
 
 
     def load_basic_data(self):
