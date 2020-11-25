@@ -12,22 +12,20 @@ from io import BytesIO
 import requests
 import time
 import os
+import sys
+import argparse
 
 import home
 import preferences
 import roulette
 import recommendation
 import liked
-import dashboard
 import checkout
 
 
 CSS = """
-    img {
-        border-radius: 4px;
-    }
-
-    .stProgress .st-ep { background: linear-gradient(135deg, rgba(149,214,164,1) 0%, rgba(1,85,98,1) 100%); }
+    img {border-radius: 4px;}
+    .stProgress > div > div > div { background: linear-gradient(135deg, rgba(149,214,164,1) 0%, rgba(1,85,98,1) 100%); }
 """
 
 st.set_page_config(page_title='FedUp', page_icon="🍲", layout='centered', initial_sidebar_state='collapsed')
@@ -46,13 +44,12 @@ def load_inputs(recipes_path, content_matrix_path, rating_matrix_path):
 class MultiApp:
 
     def __init__(self, local=True):
-
+        self.local = local
         self.apps = []
 
         self.user_id = 3
 
-        if local:
-            self.local = True
+        if self.local:
             self.recipes_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/recipe_pp.csv"))
             self.prefs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/user_prefs.csv"))
             self.likes_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/user_likes.csv"))
@@ -60,7 +57,6 @@ class MultiApp:
             self.content_matrix_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/content_latent.csv"))
             self.rating_matrix_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/rating_latent.csv"))
         else:
-            self.local = False
             pass
 
         self.load_static_data()
@@ -162,8 +158,14 @@ class MultiApp:
 
 if __name__ == "__main__":
 
+    # Getting args
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--local', action='store', dest='local',
+                        help='Flag for Debug mode', default=True)
+    args = parser.parse_args()
+
     # Start app
-    app = MultiApp()
+    app = MultiApp(args.local)
 
     # Add pages
     app.add_app("Home", home.run)
@@ -171,7 +173,6 @@ if __name__ == "__main__":
     app.add_app("Food Roulette", roulette.run)
     app.add_app("Recommendations", recommendation.run)
     app.add_app("Liked Recipes", liked.run)
-    # app.add_app("Dashboard", dashboard.run)
     app.add_app("Checkout", checkout.run)
 
     # Run the app

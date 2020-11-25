@@ -89,12 +89,12 @@ def draw_recipe(app, recipe, scope):
             else:
                 if st.button('✋ Unlike', f'like-{recipe.recipe_id}'):
                     storage.clear_like(app, recipe.recipe_id)
-                    storage.remove_from_checkout(app, recipe.recipe_id)
+                    # storage.remove_from_checkout(app, recipe.recipe_id)
                     st.experimental_rerun()
 
             if st.button('👎 Dislike', f'dislike-{recipe.recipe_id}'):
                 storage.save_like(app, recipe.recipe_id, 0)
-                storage.remove_from_checkout(app, recipe.recipe_id)
+                # storage.remove_from_checkout(app, recipe.recipe_id)
                 st.experimental_rerun()
 
             st.markdown("---")

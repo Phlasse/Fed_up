@@ -19,6 +19,7 @@ def get_credentials():
     creds_gcp = service_account.Credentials.from_service_account_info(creds_json)
     return creds_gcp
 
+
 def import_file(load_path='', filename='', bucket=BUCKET_NAME):
     creds = get_credentials()
     client = storage.Client(credentials=creds, project=PROJECT_ID)
