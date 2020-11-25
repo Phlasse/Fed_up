@@ -74,7 +74,8 @@ class MultiApp:
         self.load_user_data()
 
 
-    def get_credentials():
+
+    def get_credentials(self):
         credentials_raw = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
         if '.json' in credentials_raw:
             credentials_raw = open(credentials_raw).read()
