@@ -61,7 +61,12 @@ class MultiApp:
             self.rating_matrix_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/rating_latent.csv"))
         else:
             self.local = False
-            pass
+            self.recipes_path = f"gs://fed-up-bucket-01/data/app/recipe_pp.csv"
+            self.prefs_path = f"gs://fed-up-bucket-01/data/app/user_prefs.csv"
+            self.likes_path = f"gs://fed-up-bucket-01/data/app/recipe_pp.csv"
+            self.checkouts_path = f"gs://fed-up-bucket-01/data/app/user_checkouts.csv"
+            self.content_matrix_path = f"gs://fed-up-bucket-01/data/app/content_latent.csv"
+            self.rating_matrix_path = f"gs://fed-up-bucket-01/data/app/rating_latent.csv"
 
         self.load_static_data()
         self.load_basic_data()
