@@ -60,9 +60,24 @@ pypi:
 	@twine upload dist/* -u lologibus2
 
 
+
+
+
+# ----------------------------------
+#      HEROKU - SETTINGS
+# ----------------------------------
+
+deploy_heroku:
+  -@git push heroku master
+  -@heroku ps:scale web=1
+
+heroku_update: deploy_heroku heroku_set_gcp_env
+
+
+
 # ----------------------------------
 #      HEROKU - GOOGLE CREDENTIALS
 # ----------------------------------
 
 heroku_set_gcp_env:
-	-@heroku config:set GOOGLE_APPLICATION_CREDENTIALS="$(< /home/olivier/.gcp/Fed-Up-1d69826c965f.json)"
+	-@heroku config:set GOOGLE_APPLICATION_CREDENTIALS="$(< /home/olivier/.gcp/Fed-Up-0d6d83f73bd5.json)"
