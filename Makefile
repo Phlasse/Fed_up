@@ -65,4 +65,4 @@ pypi:
 # ----------------------------------
 
 heroku_set_gcp_env:
-	-@heroku config:set GOOGLE_APPLICATION_CREDENTIALS=$(GOOGLE_APPLICATION_CREDENTIALS)
+	-@heroku config:set GOOGLE_APPLICATION_CREDENTIALS="$(< /home/olivier/.gcp/Fed-Up-1d69826c965f.json)"
