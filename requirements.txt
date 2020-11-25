@@ -20,3 +20,4 @@ flask-cors
 google-cloud-storage
 scipy
 surprise
+streamlit

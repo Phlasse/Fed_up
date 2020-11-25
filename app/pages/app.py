@@ -10,7 +10,6 @@ import base64
 from PIL import Image
 from io import BytesIO
 import requests
-import ipdb
 import time
 import os
 
@@ -27,14 +26,17 @@ CSS = """
     img {
         border-radius: 4px;
     }
+
+    .stProgress .st-ep { background: linear-gradient(135deg, rgba(149,214,164,1) 0%, rgba(1,85,98,1) 100%); }
 """
 
 st.set_page_config(page_title='FedUp', page_icon="🍲", layout='centered', initial_sidebar_state='collapsed')
 st.write(f'<style>{CSS}</style>', unsafe_allow_html=True)
 
 
-@st.cache(suppress_st_warning=True)
-def load_matrices(recipes_path, content_matrix_path, rating_matrix_path):
+
+@st.cache(show_spinner=False)
+def load_inputs(recipes_path, content_matrix_path, rating_matrix_path):
     recipes = pd.read_csv(recipes_path)
     content_matrix = pd.read_csv(content_matrix_path).rename(columns={'Unnamed: 0': 'recipe_id'}).set_index('recipe_id')
     rating_matrix = pd.read_csv(rating_matrix_path).rename(columns={'Unnamed: 0': 'recipe_id'}).set_index('recipe_id')
@@ -43,42 +45,49 @@ def load_matrices(recipes_path, content_matrix_path, rating_matrix_path):
 
 class MultiApp:
 
-    def __init__(self):
+    def __init__(self, local=True):
 
         self.apps = []
 
         self.user_id = 3
 
-        # TO DO: DEFINE PROPER PATH
-        self.recipes_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/recipe_pp.csv"))
-        self.prefs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/user_prefs.csv"))
-        self.likes_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/user_likes.csv"))
-        self.checkouts_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/user_checkouts.csv"))
-        self.content_matrix_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/content_latent.csv"))
-        self.rating_matrix_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/rating_latent.csv"))
+        if local:
+            self.local = True
+            self.recipes_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/recipe_pp.csv"))
+            self.prefs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/user_prefs.csv"))
+            self.likes_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/user_likes.csv"))
+            self.checkouts_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/user_checkouts.csv"))
+            self.content_matrix_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/content_latent.csv"))
+            self.rating_matrix_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data/rating_latent.csv"))
+        else:
+            self.local = False
+            pass
 
-        self.prefs = pd.read_csv(self.prefs_path)
-        self.likes = pd.read_csv(self.likes_path)
-        self.checkouts = pd.read_csv(self.checkouts_path)
+        self.load_static_data()
+        self.load_basic_data()
+        self.load_user_data()
 
-        recipes, content_matrix, rating_matrix = load_matrices(self.recipes_path, self.content_matrix_path, self.rating_matrix_path)
+
+    def load_static_data(self):
+        recipes, content_matrix, rating_matrix = load_inputs(self.recipes_path, self.content_matrix_path, self.rating_matrix_path)
         self.recipes = recipes
         self.content_matrix = content_matrix
         self.rating_matrix = rating_matrix
 
+
+    def load_basic_data(self):
+        self.prefs = pd.read_csv(self.prefs_path)
+        self.likes = pd.read_csv(self.likes_path)
+        self.checkouts = pd.read_csv(self.checkouts_path)
+
+
+    def load_user_data(self):
         self.user_prefs = self.prefs[self.prefs.app_user_id == self.user_id]
         self.user_name = self.user_prefs.name.values[0]
         self.user_rates = self.likes[(self.likes.app_user_id == self.user_id)]
         self.user_likes = self.user_rates[(self.user_rates.liked == 1)]
         self.user_dislikes = self.user_rates[(self.user_rates.liked == 0)]
         self.user_checkouts = self.checkouts[(self.checkouts.app_user_id == self.user_id)]
-
-
-    # def heavy_load(self):
-    #     recipes, content_matrix, rating_matrix = load_matrices(self.recipes_path, self.content_matrix_path, self.rating_matrix_path)
-    #     self.recipes = recipes
-    #     self.content_matrix = content_matrix
-    #     self.rating_matrix = rating_matrix
 
 
     def set_time(self, time):
@@ -121,6 +130,16 @@ class MultiApp:
             return 5
 
 
+    def set_recs(self, recs):
+        self.recs = recs
+
+    def get_recs(self):
+        if 'recs' in locals():
+            return self.recs
+        else:
+            return None
+
+
     def add_app(self, title, func):
         self.apps.append({
             "title": title,
@@ -143,7 +162,10 @@ class MultiApp:
 
 if __name__ == "__main__":
 
+    # Start app
     app = MultiApp()
+
+    # Add pages
     app.add_app("Home", home.run)
     app.add_app("Profile", preferences.run)
     app.add_app("Food Roulette", roulette.run)
@@ -151,5 +173,11 @@ if __name__ == "__main__":
     app.add_app("Liked Recipes", liked.run)
     # app.add_app("Dashboard", dashboard.run)
     app.add_app("Checkout", checkout.run)
+
+    # Run the app
     app.run()
-    # app.heavy_load()
+
+    # Loading data
+    # app.load_static_data()
+    # app.load_basic_data()
+    # app.load_user_data()
