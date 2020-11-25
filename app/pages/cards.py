@@ -12,44 +12,7 @@ import ipdb
 import time
 import os
 
-
-def save_like(app, rid, liked):
-    info = app.user_likes[app.user_likes.recipe_id == rid]
-
-    if len(info) == 1:
-        index = info.index[0]
-        app.likes.loc[index, 'liked'] = liked
-        app.likes.loc[index, 'timestamp'] = pd.Timestamp.now()
-    else:
-        app.likes = app.likes.append({'app_user_id': app.user_id, 'recipe_id': rid, 'liked': liked, 'timestamp': pd.Timestamp.now()}, ignore_index=True)
-
-    app.likes.to_csv(app.likes_path, index=False)
-
-
-def clear_like(app, rid):
-    info = app.user_likes[app.user_likes.recipe_id == rid]
-
-    if len(info) == 1:
-        index = info.index[0]
-        app.likes.drop(app.likes.index[index], inplace=True)
-        app.likes.to_csv(app.likes_path, index=False)
-
-
-def add_to_checkout(app, rid):
-    info = app.checkouts[app.checkouts.recipe_id == rid]
-
-    if len(info) < 1:
-        app.checkouts = app.checkouts.append({'app_user_id': app.user_id, 'recipe_id': rid, 'timestamp': pd.Timestamp.now()}, ignore_index=True)
-        app.checkouts.to_csv(app.checkouts_path, index=False)
-
-
-def remove_from_checkout(app, rid):
-    info = app.checkouts[app.checkouts.recipe_id == rid]
-
-    if len(info) == 1:
-        index = info.index[0]
-        app.checkouts.drop(app.checkouts.index[index], inplace=True)
-        app.checkouts.to_csv(app.checkouts_path, index=False)
+import storage
 
 
 def draw_recipe(app, recipe, scope):
@@ -60,9 +23,21 @@ def draw_recipe(app, recipe, scope):
         st.write(f"### **{title}**")
         st.write(" ")
 
-        # description = (". ").join([sentence.capitalize() for sentence in recipe.description.split(". ")])
-        # st.write(f"###### {description}")
-        # st.write(" ")
+        response_pic = requests.get(recipe['image_url'])
+        img = Image.open(BytesIO(response_pic.content))
+        st.image(img, width=500)
+        st.write(" ")
+
+        # description = (". ").join([sentence.strip().capitalize() for sentence in recipe.description.split("."|"!")])
+        # st.write(f"{description}")
+
+        clean_ingredients = [ing.strip().lower() for ing in eval(recipe['ingredients'])]
+        ingredients = (", ").join(clean_ingredients)
+        st.write(f"**Ingredients ({len(clean_ingredients)}):** {ingredients}.")
+
+        clean_steps = [step.strip().lower() for step in eval(recipe['steps'])]
+        steps = (", ").join(clean_steps)
+        st.write(f"**Steps ({len(clean_steps)}):** {steps}.")
 
 
     with recipe_liker: # Manage option
@@ -72,11 +47,11 @@ def draw_recipe(app, recipe, scope):
             st.write(" ")
 
             if st.button('👍 Like'):
-                save_like(app, recipe.recipe_id, 1)
+                storage.save_like(app, recipe.recipe_id, 1)
                 st.experimental_rerun()
 
             if st.button('👎 Dislike'):
-                save_like(app, recipe.recipe_id, 0)
+                storage.save_like(app, recipe.recipe_id, 0)
                 st.experimental_rerun()
 
             st.markdown("---")
@@ -96,22 +71,25 @@ def draw_recipe(app, recipe, scope):
             ckout = st.checkbox("Checkout", value=value, key=f'ckout-{recipe.recipe_id}')
 
             if ckout:
-                add_to_checkout(app, recipe.recipe_id)
+                storage.save_like(app, recipe.recipe_id, 1)
+                storage.add_to_checkout(app, recipe.recipe_id)
+                # st.experimental_rerun()
             else:
-                remove_from_checkout(app, recipe.recipe_id)
+                storage.remove_from_checkout(app, recipe.recipe_id)
+                # st.experimental_rerun()
 
             liked_recipes_ids = app.user_likes.recipe_id.values
             if recipe.recipe_id not in list(liked_recipes_ids):
                 if st.button('👍 Like', f'like-{recipe.recipe_id}'):
-                    save_like(app, recipe.recipe_id, 1)
+                    storage.save_like(app, recipe.recipe_id, 1)
                     st.experimental_rerun()
             else:
                 if st.button('✋ Unlike', f'like-{recipe.recipe_id}'):
-                    clear_like(app, recipe.recipe_id)
+                    storage.clear_like(app, recipe.recipe_id)
                     st.experimental_rerun()
 
             if st.button('👎 Dislike', f'dislike-{recipe.recipe_id}'):
-                save_like(app, recipe.recipe_id, 0)
+                storage.save_like(app, recipe.recipe_id, 0)
                 st.experimental_rerun()
 
             st.markdown("---")
@@ -119,16 +97,17 @@ def draw_recipe(app, recipe, scope):
             st.write(f'###### Rating: {np.round(float(recipe.rating_mean), 2)}')
             st.write(f'###### Reviews: {int(recipe.rating_count)}')
 
-            st.markdown("---")
 
-            st.write(f'###### **Calories: {float(recipe.calories)} Cal**')
-            st.write(f'###### Total fat: {float(recipe.total_fat)} %')
-            st.write(f'###### Saturated fat: {float(recipe.saturated_fat)} %')
-            st.write(f'###### Sugar: {float(recipe.sugar)} %')
-            st.write(f'###### Sodium: {float(recipe.sodium)} %')
-            st.write(f'###### Protein: {float(recipe.protein)} %')
-            st.write(f'###### Carbs: {float(recipe.carbohydrates)} %')
-            st.write(' ')
-            st.write(f'###### *For a daily intake of 2000 calories*')
+        st.markdown("---")
+
+        st.write(f'###### **Calories: {float(recipe.calories)} Cal**')
+        st.write(f'###### Total fat: {float(recipe.total_fat)} %')
+        st.write(f'###### Saturated fat: {float(recipe.saturated_fat)} %')
+        st.write(f'###### Sugar: {float(recipe.sugar)} %')
+        st.write(f'###### Sodium: {float(recipe.sodium)} %')
+        st.write(f'###### Protein: {float(recipe.protein)} %')
+        st.write(f'###### Carbs: {float(recipe.carbohydrates)} %')
+        st.write(' ')
+        st.write(f'###### *For a daily intake of 2000 calories*')
 
     st.write(" ")

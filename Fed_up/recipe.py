@@ -27,7 +27,6 @@ def get_raw_data():
     raw_df = pd.read_csv(f'{csv_path}/RAW_recipes.csv', converters=converters)
     image_df = pd.read_csv(f'{csv_path}/image_df.csv')
     raw_images = raw_df.merge(image_df, how='inner', on='id')
-    #print(raw_images.shape)
     return raw_images
 
 
@@ -147,7 +146,7 @@ def clean_data(df):
                     'n_ingredients', 'calories', 'total_fat', 'sugar', 'sodium', 'protein', 'saturated_fat',
                     'carbohydrates', 'tags', 'ingredients', 'steps', 'description', 'metadata', 'submitted', 'image_url']
 
-    target_df = pd.DataFrame(df, columns=ordered_cols)
+    target_df = pd.DataFrame(df, columns=ordered_cols).drop_duplicates(subset='recipe_id')
     return target_df
 
 
