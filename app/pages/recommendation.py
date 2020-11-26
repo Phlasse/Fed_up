@@ -15,23 +15,29 @@ import os
 from Fed_up.pipeline import get_user_recommendations
 from Fed_up import filters
 from cards import draw_recipe
-from helpers import side_filters
+from helpers import side_filters, clean_prefs
 
 
 @st.cache(show_spinner=False)
 def generate_recs(user_rates, user_prefs, recipes, cm, rm):
     user_inputs = {row['recipe_id']: row['liked'] for index, row in user_rates.iterrows()}
 
-    recs = get_user_recommendations(user_inputs = user_inputs, collaborative = float(user_prefs.collab),
+    if str(user_prefs.collab.values[0]) != 'nan':
+        collab = float(user_prefs.collab)
+    else:
+        collab = 0.5
+
+    recs = get_user_recommendations(user_inputs = user_inputs, collaborative = collab,
                                     content_latent = cm, rating_latent = rm)
 
     rec_recipes = recs.merge(recipes, on="recipe_id", how="left")
 
-    filtered_recs = filters.all_filters(rec_recipes, goal = user_prefs['goal'].values[0],
-                                                     diet = user_prefs['diet'].values[0],
-                                                     allergies = user_prefs['allergies'].values[0].split(", "),
-                                                     dislikes = user_prefs['dislikes'].values[0].split(", "),
-                                                     custom_dsl = user_prefs['custom_dsl'].values[0])
+    goal, diet, allergies, dislikes, custom_dsl = clean_prefs(user_prefs)
+    filtered_recs = filters.all_filters(rec_recipes, goal = goal,
+                                                     diet = diet,
+                                                     allergies = allergies,
+                                                     dislikes = dislikes,
+                                                     custom_dsl = custom_dsl)
     return filtered_recs
 
 
@@ -47,18 +53,21 @@ def run(app):
 
     search, time, steps, ingreds, n_recipes = side_filters(app)
 
-    data = generate_recs(app.user_rates, app.user_prefs, app.recipes, app.content_matrix, app.rating_matrix)
-
-    filtered_data = data[(data.minutes<=time) & (data.n_steps<=steps) & (data.n_ingredients<=ingreds)]
-    filtered_data = filtered_data.drop_duplicates()
-
-    if search:
-        filtered_data = filtered_data[filtered_data.metadata.str.contains(search)]
-
-    if len(filtered_data.head(n_recipes)) > 0:
-        for index, recipe in filtered_data.head(n_recipes).iterrows():
-            draw_recipe(app, recipe, 'recommendation')
-            st.markdown("---")
+    if len(app.user_rates) < 1:
+        st.markdown("###### *No information about your tastes yet, please use our food roulette!*")
 
     else:
-        st.markdown("###### *No additional recommendations to show, try adjusting your filters!*")
+        data = generate_recs(app.user_rates, app.user_prefs, app.recipes, app.content_matrix, app.rating_matrix)
+        filtered_data = data[(data.minutes<=time) & (data.n_steps<=steps) & (data.n_ingredients<=ingreds)]
+        filtered_data = filtered_data.drop_duplicates()
+
+        if search:
+            filtered_data = filtered_data[filtered_data.metadata.str.contains(search)]
+
+        if len(filtered_data.head(n_recipes)) > 0:
+            for index, recipe in filtered_data.head(n_recipes).iterrows():
+                draw_recipe(app, recipe, 'recommendation')
+                st.markdown("---")
+
+        else:
+            st.markdown("###### *No additional recommendations to show, try adjusting your filters!*")

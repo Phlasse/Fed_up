@@ -33,4 +33,4 @@ def run(app):
             st.markdown("---")
 
     else:
-        st.markdown("###### *No checked recipes, try add items to your basket!*")
+        st.markdown("###### *No checked recipes, try adding items to your basket!*")

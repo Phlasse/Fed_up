@@ -29,3 +29,32 @@ def side_filters(app):
     app.set_n_recipes(n_recipes)
 
     return search, time, steps, ingreds, n_recipes
+
+
+def clean_prefs(prefs):
+    if str(prefs['goal'].values[0]) != 'nan':
+        goal = prefs['goal'].values[0]
+    else:
+        goal = ''
+
+    if str(prefs['diet'].values[0]) != 'nan':
+        diet = prefs['diet'].values[0]
+    else:
+        diet = ''
+
+    if str(prefs['allergies'].values[0]) != 'nan':
+        allergies = prefs['allergies'].values[0].split(", "),
+    else:
+        allergies = []
+
+    if str(prefs['dislikes'].values[0]) != 'nan':
+        dislikes = prefs['dislikes'].values[0].split(", "),
+    else:
+        dislikes = []
+
+    if str(prefs['custom_dsl'].values[0]) != 'nan':
+        custom_dsl = prefs['custom_dsl'].values[0]
+    else:
+        custom_dsl = ''
+
+    return goal, diet, allergies, dislikes, custom_dsl

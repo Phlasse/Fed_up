@@ -25,7 +25,7 @@ def run(app):
     ckouts = app.user_checkouts.merge(app.recipes, on="recipe_id", how="left")
 
     if len(ckouts) == 0:
-        pass
+        st.markdown("###### *No delicious recipes added to the checkout yet!*")
 
     else:
         st.write("### **SELECTED RECIPES:**")
@@ -42,6 +42,8 @@ def run(app):
                                         'carbohydrates': 'Carbs'})
 
         st.table(recipes_show.style.background_gradient(cmap ='Greens', axis=0))
+
+        st.write(f'###### *As % for a daily intake of 2000 calories*')
 
         st.markdown("---")
         st.write("### **GROCERY LIST:**")
@@ -77,9 +79,9 @@ def run(app):
         #         call_url = f"https://hook.integromat.com/5oboi86rrbc1qsf5koeulfmtwn76c9qg?Subject={key}%20{value}%20x&note=Subscribe%20to%20Fed-up&list=Fed-up"
         #         call = requests.get(call_url)
 
-        btn2 = st.sidebar.button("🚗 Batch #469 Done!")
-        if btn2:
-            st.balloons()
+    btn2 = st.sidebar.button("🚗 Batch #469 Done!")
+    if btn2:
+        st.balloons()
 
 
         ###########################
