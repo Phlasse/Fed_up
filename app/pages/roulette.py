@@ -20,7 +20,7 @@ from helpers import clean_prefs
 def select_data(recipes, prefs):
     # Select tinder universe
     tinder_data = recipes[recipes['rating_count'] > 3].sort_values(by='rating_mean', ascending=False)
-    filter_tinder_data = tinder_data[(tinder_data.minutes<=120) & (tinder_data.n_steps<=20) & (tinder_data.n_ingredients<=25)]
+    filter_tinder_data = tinder_data[(tinder_data.minutes<=180) & (tinder_data.n_steps<=20) & (tinder_data.n_ingredients<=25)]
 
     # Filter tinder universe based on user preferences
     goal, diet, allergies, dislikes, custom_dsl = clean_prefs(prefs)

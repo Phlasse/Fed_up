@@ -22,9 +22,12 @@ def draw_recipe(app, recipe, scope):
         st.write(f"### **{title}**")
         st.write(" ")
 
-        response_pic = requests.get(recipe['image_url'])
-        img = Image.open(BytesIO(response_pic.content))
-        st.image(img, width=500)
+        try:
+            response_pic = requests.get(recipe['image_url'])
+            img = Image.open(BytesIO(response_pic.content))
+            st.image(img, width=500)
+        except:
+            pass
 
         if scope == 'recommendation':
             st.progress(int(recipe['rec_score']*100))

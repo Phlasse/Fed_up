@@ -12,6 +12,9 @@ import requests
 import time
 import os
 
+
+ADJUSTED_LIST = ['olive oil', 'salt', 'pepper', 'cayenne', 'salt and pepper', 'garlic salt', 'butter', 'garlic cloves', 'black pepper', 'fresh rosemary', 'garlic clove','kosher salt', 'rosemary', 'oil', 'salt & freshly ground black pepper', 'ground black pepper', 'sugar']
+
 def run(app):
     # Display headers
     st.write("# Checkout")
@@ -66,8 +69,9 @@ def run(app):
 
             ing_list_exp = pd.DataFrame()
             ing_list_exp["Ingredient"] = list(summed_ingredients.keys())
-            ing_list_exp["Ingredient"] = ing_list_exp["Ingredient"].str.title()
             ing_list_exp["Quantity"] = list(summed_ingredients.values())
+            ing_list_exp = ing_list_exp[~(ing_list_exp.Ingredient.isin(ADJUSTED_LIST))]
+            ing_list_exp["Ingredient"] = ing_list_exp["Ingredient"].str.title()
             ing_list_exp = ing_list_exp.set_index('Ingredient').sort_values(by="Quantity", ascending=False)
 
             st.table(ing_list_exp.style.background_gradient(cmap ='Greens', axis=0))
