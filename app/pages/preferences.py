@@ -103,20 +103,6 @@ def run(app):
     collab = st.slider("Do you want to taste new recipes?", 0, 10, int(collab_default * 10))
     st.write(' ')
 
-    # else:
-    #     name = st.text_input("What is your name?")
-    #     st.write(' ')
-    #     diet = st.selectbox("Pick your diet:", tuple(diet for diet in LIST_DIET))
-    #     st.write(' ')
-    #     goal = st.selectbox("Pick your nutritional goal:", tuple(goal for goal in LIST_GOAL))
-    #     st.write(' ')
-    #     allergies = st.multiselect("Any allergies?", tuple(allergy for allergy in ALLERGIES))
-    #     st.write(' ')
-    #     dislikes = st.multiselect("How about dislikes?", tuple(dislike for dislike in DISLIKES))
-    #     st.write(' ')
-    #     custom_dsl = st.text_input("Any other dislikes?")
-    #     st.write(' ')
-
 
     if st.button('✅ Save'):
 

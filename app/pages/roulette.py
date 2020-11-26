@@ -13,6 +13,7 @@ import os
 
 from Fed_up import filters
 from cards import draw_recipe
+from helpers import clean_prefs
 
 
 @st.cache(show_spinner=False)
@@ -21,11 +22,12 @@ def select_data(recipes, prefs):
     tinder_data = recipes[recipes['rating_count'] > 3].sort_values(by='rating_mean', ascending=False)
 
     # Filter tinder universe based on user preferences
-    user_data = filters.all_filters(tinder_data, goal = prefs['goal'].values[0],
-                                                 diet = prefs['diet'].values[0],
-                                                 allergies = prefs['allergies'].values[0].split(", "),
-                                                 dislikes = prefs['dislikes'].values[0].split(", "),
-                                                 custom_dsl = prefs['custom_dsl'].values[0])
+    goal, diet, allergies, dislikes, custom_dsl = clean_prefs(prefs)
+    user_data = filters.all_filters(tinder_data, goal = goal,
+                                                 diet = diet,
+                                                 allergies = allergies,
+                                                 dislikes = dislikes,
+                                                 custom_dsl = custom_dsl)
 
     # print(f"User #{prefs['app_user_id'].values[0]} - {prefs['name'].values[0]}: {len(tinder_data)} > {len(user_data)}")
 
