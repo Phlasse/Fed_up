@@ -43,7 +43,7 @@ def run(app):
 
         st.table(recipes_show.style.background_gradient(cmap ='Greens', axis=0))
 
-        st.write(f'###### *As % for a daily intake of 2000 calories*')
+        st.write(f'###### *Calories in Cal; other figures as % for a daily intake of 2000 calories*')
 
         st.markdown("---")
         st.write("### **GROCERY LIST:**")
