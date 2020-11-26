@@ -31,10 +31,6 @@ def draw_recipe(app, recipe, scope):
 
         st.write(" ")
 
-
-        # description = (". ").join([sentence.strip().capitalize() for sentence in recipe.description.split("."|"!")])
-        # st.write(f"{description}")
-
         clean_ingredients = [ing.strip().lower() for ing in eval(recipe['ingredients'])]
         ingredients = (", ").join(clean_ingredients)
         st.write(f"**Ingredients ({len(clean_ingredients)}):** {ingredients}.")

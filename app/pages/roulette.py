@@ -20,14 +20,15 @@ from helpers import clean_prefs
 def select_data(recipes, prefs):
     # Select tinder universe
     tinder_data = recipes[recipes['rating_count'] > 3].sort_values(by='rating_mean', ascending=False)
+    filter_tinder_data = tinder_data[(tinder_data.minutes<=120) & (tinder_data.n_steps<=20) & (tinder_data.n_ingredients<=25)]
 
     # Filter tinder universe based on user preferences
     goal, diet, allergies, dislikes, custom_dsl = clean_prefs(prefs)
-    user_data = filters.all_filters(tinder_data, goal = goal,
-                                                 diet = diet,
-                                                 allergies = allergies,
-                                                 dislikes = dislikes,
-                                                 custom_dsl = custom_dsl)
+    user_data = filters.all_filters(filter_tinder_data, goal = goal,
+                                                        diet = diet,
+                                                        allergies = allergies,
+                                                        dislikes = dislikes,
+                                                        custom_dsl = custom_dsl)
 
     # print(f"User #{prefs['app_user_id'].values[0]} - {prefs['name'].values[0]}: {len(tinder_data)} > {len(user_data)}")
 
