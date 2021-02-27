@@ -26,12 +26,12 @@ clean:
 	@rm -fr Fed_up.egg-info
 
 install:
-	@pip install . -U
+	@pip install -e .
 
 all: clean install test black check_code
 
 
-uninstal:
+uninstall:
 	@python setup.py install --record files.txt
 	@cat files.txt | xargs rm -rf
 	@rm -f files.txt

@@ -12,3 +12,7 @@ groupama/data/base_pno.*
 Fed_up/data/
 .env
 *csv
+*out
+app/data/
+nginx/
+letsencrypt/

@@ -73,11 +73,12 @@ def run(app):
             st.table(ing_list_exp.style.background_gradient(cmap ='Greens', axis=0))
 
 
-        btn = st.sidebar.button("📝 Export to Microsoft To Do")
-        # if ToDo:
-        #     for key, value in summed_ingredients.items():
-        #         call_url = f"https://hook.integromat.com/5oboi86rrbc1qsf5koeulfmtwn76c9qg?Subject={key}%20{value}%20x&note=Subscribe%20to%20Fed-up&list=Fed-up"
-        #         call = requests.get(call_url)
+    #btn = st.sidebar.button("📝 Export to Microsoft To Do")
+    #if btn:
+    #    for key, value in summed_ingredients.items():
+    #        time.sleep(0.25)
+    #        call_url = f"https://hook.integromat.com/5oboi86rrbc1qsf5koeulfmtwn76c9qg?Subject={key}%20{value}%20x&note=Subscribe%20to%20Fed-up&list=Fed-up"
+    #        call = requests.get(call_url)
 
     btn2 = st.sidebar.button("🚗 Batch #469 Done!")
     if btn2:
