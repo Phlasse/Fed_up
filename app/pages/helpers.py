@@ -16,7 +16,7 @@ def side_filters(app):
 
     search = st.sidebar.text_input("Search by keyword:")
 
-    time = st.sidebar.slider("How long are you willing to wait?", 15, 120, app.get_time())
+    time = st.sidebar.slider("How long are you willing to wait?", 15, 180, app.get_time())
     app.set_time(time)
 
     steps = st.sidebar.slider("How many steps are you willing to execute?", 3, 20, app.get_steps())

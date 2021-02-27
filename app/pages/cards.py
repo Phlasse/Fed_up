@@ -22,18 +22,17 @@ def draw_recipe(app, recipe, scope):
         st.write(f"### **{title}**")
         st.write(" ")
 
-        response_pic = requests.get(recipe['image_url'])
-        img = Image.open(BytesIO(response_pic.content))
-        st.image(img, width=500)
+        try:
+            response_pic = requests.get(recipe['image_url'])
+            img = Image.open(BytesIO(response_pic.content))
+            st.image(img, width=500)
+        except:
+            pass
 
         if scope == 'recommendation':
             st.progress(int(recipe['rec_score']*100))
 
         st.write(" ")
-
-
-        # description = (". ").join([sentence.strip().capitalize() for sentence in recipe.description.split("."|"!")])
-        # st.write(f"{description}")
 
         clean_ingredients = [ing.strip().lower() for ing in eval(recipe['ingredients'])]
         ingredients = (", ").join(clean_ingredients)
