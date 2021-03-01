@@ -18,11 +18,17 @@ def run(app):
 
     ## Homepage: image background
     page_bg_img = '''
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-    body {
-        background-image: url("https://cdn.pixabay.com/photo/2017/08/05/12/33/flat-lay-2583213_1280.jpg");
-        background-size: cover;
+    @media all and (orientation: landscape) {
+        body {
+            background-image: url("https://cdn.pixabay.com/photo/2017/08/05/12/33/flat-lay-2583213_1280.jpg");
+            background-size: cover;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            opacity: 0.95;
         }
+    }
     </style>
     '''
     st.markdown(page_bg_img, unsafe_allow_html=True)
